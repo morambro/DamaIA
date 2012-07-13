@@ -116,10 +116,11 @@ class ChessboardView extends MainFrame {
 				            /* re-enable replyButton */
 				            replyButton.enabled = true
 				        }else{
-				            if(box.top == black){
+				            //TODO: decommentare!!!!!!!!!!!!
+				            /*if(box.top == black || box.top == black_king){
 				                println("hai selezionato una pedina nera!!");
 				                return;
-				            }
+				            }*/
 				            /* if the box clicked was selected, de-select it */
 				            if(box.top == white_selected){
 				                box.top = white
@@ -159,7 +160,6 @@ class ChessboardView extends MainFrame {
             }
     	}
     }
-    
     
     /**
      * Function called to update the chessboard

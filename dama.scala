@@ -2,9 +2,7 @@ class Pawn(val player:String){
 	
 	override def equals(o : Any) = o match{case p:Pawn => player==p.player}
 	
-	def this(p : Pawn){
-		this(p.player)
-	}
+	def this(p : Pawn) {this(p.player)}
 }
 
 class KingPawn(player : String) extends Pawn(player)
@@ -60,7 +58,7 @@ class Chessboard{
 	
 	for(i <- 0 until 3)
 		for(box:Box <- grid(i) if(box.color == "light")){
-			box.content = new KingPawn("b")
+			box.content = new Pawn("b")
 		}
 	
 	for(i <- 5 until 8)
@@ -166,7 +164,6 @@ object Chessboard{
 	}
 }
 
-
 /**
  * Class wich represents a single move, indicating origin and destination
  */
@@ -189,27 +186,27 @@ class Intelligence{
 	val MIN = "w"
 
 
-	private def getPawnMove(grid:Array[Array[Box]], from_x:Int, from_y:Int, x:Int, y:Int, inc:Int => Int,opponent:String) : Move = {
+	private def getPawnMove(grid:Array[Array[Box]], from_x:Int, from_y:Int, x:Int, y:Int, inc:Int => Int,inc_b : Int => Int,opponent:String) : Move = {
 		/* look at what there is in the near box */
 		grid(x)(y).content match{
 			case null => return new Move(from_x,from_y,x,y,"move")
 			case p : KingPawn => 
 			// Case in wich there is a simple opponent pawn
-			case value : Pawn if(value.player == opponent)  => {
-				val res = canEat(grid,from_x,from_y,(a:Int,b:Int) => (inc(inc(a)),b+2))
-				if(res != null) return new Move(from_x,from_y,res._1,res._2,"eat") 
+			case p : Pawn if(p.player == opponent)  => {
+				val res = canEat(grid,from_x,from_y,(a:Int,b:Int) => (inc(inc(a)),inc_b(b)))
+				if(res != null) {return new Move(from_x,from_y,res._1,res._2,"eat")}
 			}
 			case _ => 
 		}
 		null
 	}
 	
-	private def getKingPawnMove(grid:Array[Array[Box]], from_x:Int, from_y:Int, x:Int, y:Int, inc:Int => Int,opponent:String) : Move = {
+	private def getKingPawnMove(grid:Array[Array[Box]], from_x:Int, from_y:Int, x:Int, y:Int, inc: Int => Int,opponent:String) : Move = {
 		/* look at what there is in the near box */
 		grid(x)(y).content match{
 			case null => return new Move(from_x,from_y,x,y,"move")
 			// Every pawn is ok!
-			case value : Pawn if(value.player == opponent)  => {
+			case p : Pawn if(p.player == opponent)  => {
 				val res = canEat(grid,from_x,from_y,(a:Int,b:Int) => (inc(inc(a)),b+2))
 				if(res != null) return new Move(from_x,from_y,res._1,res._2,"eat") 
 			}
@@ -261,11 +258,11 @@ class Intelligence{
 				// Check only in one direction
 				case p : Pawn => {
 					if(b.y + 1 < 8) {
-						val move = getPawnMove(grid,b.x,b.y,inc(b.x),b.y+1,inc,opponent)
+						val move = getPawnMove(grid,b.x,b.y,inc(b.x),b.y+1,inc,(y => y+2),opponent)
 						if(move != null) moves += move
 					}
 					if(b.y - 1 > -1) {
-						val move = getPawnMove(grid,b.x,b.y,inc(b.x),b.y-1,inc,opponent)
+						val move = getPawnMove(grid,b.x,b.y,inc(b.x),b.y-1,inc,(y => y-2),opponent)
 						if(move != null) moves += move
 					}
 				} 
@@ -290,11 +287,10 @@ class Intelligence{
 	}
 	
 	def maxMove(depth : Int, game : Array[Array[Box]], alpha : Int, beta : Int) : (Int,Move) = {
-		if(depth == 0) {
-			//println("valutazione per player (depth = 0) +"+player+" : "+evaluate(player,grid))
-			return (evaluate(MAX,game),null)
-		}
+		if(depth == 0) return (evaluate(MAX,game),null)
+		
 		val moves = getPossibleMovesFor(game,MAX,MIN)
+		
 		if(moves == null || moves.length == 0) return (evaluate(MAX,game),null)
 		var best_move : (Int,Move) = null
 		var new_alpha = alpha
