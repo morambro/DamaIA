@@ -185,15 +185,23 @@ class Intelligence{
 	val MAX = "b"
 	val MIN = "w"
 
-
-	private def getPawnMove(grid:Array[Array[Box]], from_x:Int, from_y:Int, x:Int, y:Int, inc:Int => Int,inc_b : Int => Int,opponent:String) : Move = {
+	/** 
+	 * Creates the move for a simple pawngiven from-coordinates and to-coordiantes. It checks if there is a possible "eat" move.
+	 *
+	 * @param grid : current configuration
+	 * @param form_x,from_y : from-coordinates
+	 * @param x,y : to-coordiantes
+	 * @param inc : function wich increments properly the x coordinate
+	 * @param inc_y : function used to increment the y coordinate when searching for an "eat" move
+	 */
+	private def getPawnMove(grid:Array[Array[Box]], from_x:Int, from_y:Int, x:Int, y:Int, inc:Int => Int,inc_y : Int => Int,opponent:String) : Move = {
 		/* look at what there is in the near box */
 		grid(x)(y).content match{
 			case null => return new Move(from_x,from_y,x,y,"move")
 			case p : KingPawn => 
 			// Case in wich there is a simple opponent pawn
 			case p : Pawn if(p.player == opponent)  => {
-				val res = canEat(grid,from_x,from_y,(a:Int,b:Int) => (inc(inc(a)),inc_b(b)))
+				val res = canEat(grid,from_x,from_y,(a:Int,b:Int) => (inc(inc(a)),inc_y(b)))
 				if(res != null) {return new Move(from_x,from_y,res._1,res._2,"eat")}
 			}
 			case _ => 
@@ -201,13 +209,13 @@ class Intelligence{
 		null
 	}
 	
-	private def getKingPawnMove(grid:Array[Array[Box]], from_x:Int, from_y:Int, x:Int, y:Int, inc: Int => Int,opponent:String) : Move = {
+	private def getKingPawnMove(grid:Array[Array[Box]], from_x:Int, from_y:Int, x:Int, y:Int, inc: Int => Int,inc_y : Int => Int,opponent:String) : Move = {
 		/* look at what there is in the near box */
 		grid(x)(y).content match{
 			case null => return new Move(from_x,from_y,x,y,"move")
 			// Every pawn is ok!
 			case p : Pawn if(p.player == opponent)  => {
-				val res = canEat(grid,from_x,from_y,(a:Int,b:Int) => (inc(inc(a)),b+2))
+				val res = canEat(grid,from_x,from_y,(a:Int,b:Int) => (inc(inc(a)),inc_y(b)))
 				if(res != null) return new Move(from_x,from_y,res._1,res._2,"eat") 
 			}
 			case _ => 
@@ -236,21 +244,21 @@ class Intelligence{
 				case p : KingPawn =>  {
 					if(b.x + 1 < 8){
 						if(b.y + 1 < 8){
-							val move = getKingPawnMove(grid,b.x,b.y,b.x+1,b.y+1,inc,opponent)
+							val move = getKingPawnMove(grid,b.x,b.y,b.x+1,b.y+1,inc,(_+2),opponent)
 							if(move != null) moves += move
 						}
 						if(b.y - 1 > -1){
-							val move = getKingPawnMove(grid,b.x,b.y,b.x+1,b.y-1,inc,opponent)
+							val move = getKingPawnMove(grid,b.x,b.y,b.x+1,b.y-1,inc,(_-2),opponent)
 							if(move != null) moves += move
 						}
 					}
 					if(b.x - 1 > 0){
 						if(b.y + 1 < 8){
-							val move = getKingPawnMove(grid,b.x,b.y,b.x-1,b.y+1,dec,opponent)
+							val move = getKingPawnMove(grid,b.x,b.y,b.x-1,b.y+1,dec,(_+2),opponent)
 							if(move != null) moves += move
 						}
 						if(b.y - 1 > -1){
-							val move = getKingPawnMove(grid,b.x,b.y,b.x-1,b.y-1,dec,opponent)
+							val move = getKingPawnMove(grid,b.x,b.y,b.x-1,b.y-1,dec,(_-2),opponent)
 							if(move != null) moves += move
 						}
 					}
@@ -258,11 +266,11 @@ class Intelligence{
 				// Check only in one direction
 				case p : Pawn => {
 					if(b.y + 1 < 8) {
-						val move = getPawnMove(grid,b.x,b.y,inc(b.x),b.y+1,inc,(y => y+2),opponent)
+						val move = getPawnMove(grid,b.x,b.y,inc(b.x),b.y+1,inc,(_+2),opponent)
 						if(move != null) moves += move
 					}
 					if(b.y - 1 > -1) {
-						val move = getPawnMove(grid,b.x,b.y,inc(b.x),b.y-1,inc,(y => y-2),opponent)
+						val move = getPawnMove(grid,b.x,b.y,inc(b.x),b.y-1,inc,(_-2),opponent)
 						if(move != null) moves += move
 					}
 				} 
@@ -275,12 +283,13 @@ class Intelligence{
 	
 	/**
 	 * Implements minmax algorithm. It decides the best move supposing the opponent plays in optimal mode. 
+	 * If at the top level there are "eat" moves, they are the one to be considered.
 	 *
 	 * @param dept : maximum depth for the minmax tree of recoursive calls
 	 * @param grid : represents the current situation of the chessboard
 	 * @param player : the player for wich to decide the best move at the current tree level
 	 * 
-	 * return : a couple of elemnents, composed by the value of the current state of the chessboard and the move selected
+	 * return : a couple of elemnents, composed by the evaluation of the current state of the chessboard and the move selected
 	 */	
 	def minMax(depth : Int, grid : Array[Array[Box]]) : (Int,Move) = {
 		return maxMove(depth,grid,Int.MaxValue,Int.MinValue)
