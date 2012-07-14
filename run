@@ -1,3 +1,4 @@
+
 cd build
 scala Main
 cd ..
