@@ -11,6 +11,7 @@ import javax.swing._
 import java.awt._
 import javax.imageio.ImageIO
 
+import scala.swing.Dialog._
 
 class ChessBox(bk:Icon,var top_img:Image,var selected:Boolean) extends Label{
 
@@ -44,6 +45,7 @@ class ChessboardView extends MainFrame {
     val chessboard = new GridPanel(8,8)
     val replyButton = new Button("Reply")
     
+
     var white : Image = null
     var black : Image = null
     var white_selected : Image = null
@@ -108,33 +110,36 @@ class ChessboardView extends MainFrame {
 				                println("sposto");
 				                /* ask Game if the current move is legal and in that case, update */
 				                val valid = op(selected.x,selected.y,i,j)
-				            	selected = null
+				            	if(valid) {
+				            		// Only if the move was valid deselect the current pawn and re-enable replyButton
+				            		selected = null
+				            		replyButton.enabled = true
+				            	}
 				            }else{
-				            	/* no boxes previously selected */
+				            	// no boxes previously selected 
 				                println("selected è vuoto");
 				            }
-				            /* re-enable replyButton */
-				            replyButton.enabled = true
+				            
 				        }else{
 				            //TODO: decommentare!!!!!!!!!!!!
 				            /*if(box.top == black || box.top == black_king){
 				                println("hai selezionato una pedina nera!!");
 				                return;
 				            }*/
-				            /* if the box clicked was selected, de-select it */
+				            // if the box clicked was selected, de-select it 
 				            if(box.top == white_selected){
 				                box.top = white
 				                box.selected = false
 				                selected = null
 				            }else{
-				            	/* otherwise, select it */
+				            	// otherwise, select it 
 				                if (box.top == white) box.top = white_selected
 				                if (box.top == white_king) box.top = white_king_selected
 				                box.selected = true
 				                selected = box;selected.x = i;selected.y = j
 				            }
+				        	box.repaint
 				        }   
-				        box.repaint
 					}
 				}
 			}
@@ -178,9 +183,12 @@ class ChessboardView extends MainFrame {
             }
         }
     }
+
+    def showPopUpMessage(message:String){
+    	scala.swing.Dialog.showMessage(null, message, "info", Message.Info, scala.swing.Swing.EmptyIcon)
+    }
     
-    
+    resizable = false
     visible = true
-    
 }
 

@@ -1,9 +1,10 @@
+import scala.actors._
+import scala.actors.Actor._
 /**
  * Logic class which coordinates the different parts of the game. It offers also methods callable by the View.
  *
  */
-class Game private(){
-	
+class Game private(val white_must_eat:Boolean){
 	var pView = new ChessboardView
 	
 	def view = pView
@@ -24,21 +25,29 @@ class Game private(){
 	 */
 	view.setReplyAction({
 		_ => {
-			val s = intelligence.minMax(10,chessboard.grid)
-			print("\n"+s)
-			print("valore minmax per 'b' = "+s._1+" mossa : "); 
-			if(s._2 != null) {
-				s._2.printMove
-				Chessboard.executeMoves(chessboard.grid,Array(s._2),"b")
-				view.updateChessboard(chessboard)
-				chessboard.printBoard
-			} else {
-				//TODO : Comunicare la fine della partita!
-				println("\nNessuna mossa possibile!")
-			}
+			replayActions
 		}
 	})
 	
+
+	def replayActions() {
+		val s = intelligence.minMax(10,chessboard.grid)
+		print("\n"+s)
+		print("valore minmax per 'b' = "+s._1+" mossa : "); 
+		if(s._2 != null) {
+			s._2.printMove
+			Chessboard.executeMoves(chessboard.grid,Array(s._2),"b")
+			view.updateChessboard(chessboard)
+			chessboard.printBoard
+		} else {
+			println("\nNessuna mossa possibile!")
+			view.showPopUpMessage("Partita finita, il bianco vince!")
+		}
+
+		// If white doesn't have other possible moves, communicates that black wins!
+		if(intelligence.getPossibleMovesFor(chessboard.grid,"w","b").length == 0) 
+			view.showPopUpMessage("Partita finita, il nero vince!")
+	}
 	
 	/**
 	 * Method callable by the view after human interaction (white player move!!)
@@ -46,16 +55,24 @@ class Game private(){
 	def updateChessboard(x:Int,y:Int,to_x:Int,to_y:Int): Boolean = {
 		val move = new Move(x,y,to_x,to_y,"move")
 		val isValid = Chessboard.isMoveValid(chessboard.grid,move,"w","b")
-		if(move.move_type != "eat"){
+		println(white_must_eat)
+		if(white_must_eat &&  move.move_type != "eat"){
 			val moves = intelligence.getPossibleMovesFor(chessboard.grid,"w","b")
 			if(moves.length > 0 && moves(0).move_type == "eat"){
 				println("LA MOSSA NON E' VALIDA PERCHE' IL GIOCATORE DEVE MANGIARE!!")
+				view.showPopUpMessage("Mossa non valida, il bianco deve mangiare!")
 				return false;
 			}
 		}
 		if(isValid){
 			Chessboard.executeMoves(chessboard.grid,Array(move),"w")
 			view.updateChessboard(chessboard)
+			// delegate to an actor opponent's reply
+			actor {
+				reactWithin(300){
+					case TIMEOUT => replayActions
+				}
+			}
 		}
 		isValid
 	}
@@ -66,12 +83,22 @@ class Game private(){
  * Companion Object used to implement Singleton design pattern
  */
 object Game{
-	val instance = new Game()
-	def getInstance() = instance	
+
+	var white_must_eat = true;
+
+	var instance : Game = null
+
+	def getInstance() = {
+		if(instance == null) instance = new Game(white_must_eat)	
+		instance
+	}
 }
 
 
 object Main extends App{
-	val game = Game.getInstance
+	override def main(a:Array[String]){
+		Game.white_must_eat = false
+		Game.getInstance
+	}
 }
 
