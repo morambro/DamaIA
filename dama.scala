@@ -58,7 +58,7 @@ class Chessboard{
 	
 	for(i <- 0 until 3)
 		for(box:Box <- grid(i) if(box.color == "light")){
-			box.content = new KingPawn("b")
+			box.content = new Pawn("b")
 		}
 	
 	for(i <- 5 until 8)
@@ -185,6 +185,28 @@ class Intelligence{
 	val MAX = "b"
 	val MIN = "w"
 
+
+	/**
+	 * tells if there could be a move of type "eat" from the given position and given direction
+	 */
+	def canEat( grid:Array[Array[Box]], x:Int, y:Int, direction:(Int,Int)=>(Int,Int)) : (Int,Int) = {
+		val (new_x,new_y) = direction(x,y)
+		//	println("("+x+","+y+")  ("+new_x+","+new_y+")")
+		if(new_x < 8 && new_y < 8 && new_y > -1 && new_x > -1 && grid(new_x)(new_y).content == null){
+			// if there's an empty cell after the opponent cell, through the given direction, say yes and return the new position 
+			grid(x)(y).content match {
+				case p : KingPawn => return (new_x,new_y)
+				case p : Pawn => grid((x+new_x)/2)((y+new_y)/2).content match {
+						case _ : KingPawn => 
+						case _ : Pawn => return (new_x,new_y)
+						case _ =>
+					}
+				case _ => // Does Nothing
+			}
+		}
+		null
+	}
+
 	/** 
 	 * Creates the move for a simple pawngiven from-coordinates and to-coordiantes. It checks if there is a possible "eat" move.
 	 *
@@ -202,7 +224,9 @@ class Intelligence{
 			// Case in wich there is a simple opponent pawn
 			case p : Pawn if(p.player == opponent)  => {
 				val res = canEat(grid,from_x,from_y,(a:Int,b:Int) => (inc(inc(a)),inc_y(b)))
-				if(res != null) return new Move(from_x,from_y,res._1,res._2,"eat")
+				if(res != null) {
+					return new Move(from_x,from_y,res._1,res._2,"eat")
+				}
 			}
 			case _ => 
 		}
@@ -267,7 +291,9 @@ class Intelligence{
 				case p : Pawn => {
 					if(b.y + 1 < 8) {
 						val move = getPawnMove(grid,b.x,b.y,inc(b.x),b.y+1,inc,(_+2),opponent)
-						if(move != null) moves += move
+						if(move != null) {
+							moves += move
+						}
 					}
 					if(b.y - 1 > -1) {
 						val move = getPawnMove(grid,b.x,b.y,inc(b.x),b.y-1,inc,(_-2),opponent)
@@ -341,26 +367,6 @@ class Intelligence{
 		return best_move
 	}
 	
-	/**
-	 * tells if there could be a move of type "eat" from the given position and given direction
-	 */
-	def canEat( grid:Array[Array[Box]], x:Int, y:Int, direction:(Int,Int)=>(Int,Int)) : (Int,Int) = {
-		val (new_x,new_y) = direction(x,y)
-		//	println("("+x+","+y+")  ("+new_x+","+new_y+")")
-		if(new_x < 8 && new_y < 8 && new_y >= 0 && new_x > -1 && grid(new_x)(new_y).content == null){
-			// if there's an empty cell after the opponent cell, through the given direction, say yes and return the new position 
-			grid(x)(y).content match {
-				case p : KingPawn => return (new_x,new_y)
-				case p : Pawn => grid((x+new_x)/2)((y+new_y)/2).content match {
-						case _ : KingPawn => 
-						case _ : Pawn => return (new_x,new_y)
-						case _ =>
-					}
-				case _ => // Does Nothing
-			}
-		}
-		null
-	}
 	
 	/**
 	 * Very primitive heuristic function. Evaluates the goodness of the 
