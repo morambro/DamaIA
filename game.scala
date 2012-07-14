@@ -32,7 +32,10 @@ class Game private(){
 				Chessboard.executeMoves(chessboard.grid,Array(s._2),"b")
 				view.updateChessboard(chessboard)
 				chessboard.printBoard
-			}else println("\nNessuna mossa possibile!")
+			} else {
+				//TODO : Comunicare la fine della partita!
+				println("\nNessuna mossa possibile!")
+			}
 		}
 	})
 	
@@ -42,7 +45,14 @@ class Game private(){
 	 */
 	def updateChessboard(x:Int,y:Int,to_x:Int,to_y:Int): Boolean = {
 		val move = new Move(x,y,to_x,to_y,"move")
-		val isValid = Chessboard.isMoveValid(chessboard.grid,move)
+		val isValid = Chessboard.isMoveValid(chessboard.grid,move,"w","b")
+		if(move.move_type != "eat"){
+			val moves = intelligence.getPossibleMovesFor(chessboard.grid,"w","b")
+			if(moves.length > 0 && moves(0).move_type == "eat"){
+				println("LA MOSSA NON E' VALIDA PERCHE' IL GIOCATORE DEVE MANGIARE!!")
+				return false;
+			}
+		}
 		if(isValid){
 			Chessboard.executeMoves(chessboard.grid,Array(move),"w")
 			view.updateChessboard(chessboard)

@@ -114,11 +114,10 @@ object Chessboard{
 	}
 	
 	/**
-	 * Tells if a move is valid 
+	 * Tells if a given move is a valid move for white player 
 	 */
-	def isMoveValid(grid:Array[Array[Box]],m:Move):Boolean = {
-		println("("+m.from_x+","+m.from_y+")  ("+m.to_x+","+m.to_y+")")
-		
+	def isMoveValid(grid:Array[Array[Box]],m:Move,player : String,opponent : String):Boolean = {
+
 		grid(m.from_x)(m.from_y).content match {
 			// Case of white king pawn
 			case p : KingPawn => {
@@ -131,33 +130,34 @@ object Chessboard{
 				// check whether the given move is instead an "eat" move. Changes the move_type field's value and return true 
 				if(abs(m.from_x - m.to_x) == 2 && abs(m.from_y - m.to_y) == 2) {
 					if(grid(m.to_x)(m.to_y).content==null) 
-						grid((m.from_x+m.to_x)/2)((m.from_y+m.to_y)/2).content.player match {
-							// Case Pawn or KingPawn, is the same
-							case "b" => { 
-								m.move_type = "eat"
-								return true
-							}
+						if(grid((m.from_x+m.to_x)/2)((m.from_y+m.to_y)/2).content.player == opponent) {
+								// Case Pawn or KingPawn, is the same
+							m.move_type = "eat"
+							return true
 						}
 				}
 			}
 			// Case of simple pawn
 			case p : Pawn => {
+
 				// check whether the given move is a correct "move" action
-				if(m.from_x - m.to_x == 1 && abs(m.from_y - m.to_y) == 1) {
-					if(grid(m.from_x)(m.from_y).content!=null && grid(m.to_x)(m.to_y).content==null){
-						return true
-					}
-				}
+				if(m.from_x - m.to_x == 1 && abs(m.from_y - m.to_y) == 1) 
+					if(grid(m.from_x)(m.from_y).content!=null && grid(m.to_x)(m.to_y).content==null) return true
+
 				// check whether the given move is instead an "eat" move. Changes the move_type field's value and return true 
 				if(m.from_x - m.to_x == 2 && abs(m.from_y - m.to_y) == 2) {
 					if(grid(m.to_x)(m.to_y).content==null)
 						grid((m.from_x+m.to_x)/2)((m.from_y+m.to_y)/2).content match {
 							// In case of KingPawn, return false, cause simple Pawn cannot eat KingPawn
-							case p : KingPawn => return false
-							case p : Pawn => m.move_type = "eat";return true
+							case p : KingPawn => 
+							// Case in wich middle pawn is an opponent pawn
+							case p : Pawn if(p.player == opponent) => m.move_type = "eat";return true
+							// other cases...
+							case _ => 
 						}
 				}
 			}
+			// other cases, return false
 			case _ => 
 		}
 		false
