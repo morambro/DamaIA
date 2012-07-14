@@ -4,14 +4,39 @@ import scala.swing.Button
 import scala.swing.BorderPanel
 import scala.swing.MainFrame
 import scala.swing.Label
+import scala.swing.Dialog
+import scala.swing.Window
+import scala.swing.Frame
 import scala.swing.event._
 
 import java.io.File
-import javax.swing._
-import java.awt._
+import javax.swing.ImageIcon
+import javax.swing.Icon
+import javax.swing.SwingConstants
+import javax.swing.JRootPane
+import javax.swing.WindowConstants
+
+import java.awt.Dimension
+import java.awt.Image
+import java.awt.Graphics2D
 import javax.imageio.ImageIO
 
 import scala.swing.Dialog._
+
+class LoadingPopUp extends Frame {
+	val i = new ImageIcon("imgs/loading.gif")
+    contents = new BorderPanel(){
+		add(
+			new Label{
+				icon = i
+			}, BorderPanel.Position.Center)
+    }
+    peer.setAlwaysOnTop(true)
+    peer.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE)   
+    def show() { visible = true; peer.requestFocus()}
+    def hide() { visible = false }    	
+    centerOnScreen
+}
 
 class ChessBox(bk:Icon,var top_img:Image,var selected:Boolean) extends Label{
 
@@ -42,6 +67,8 @@ class ChessBox(bk:Icon,var top_img:Image,var selected:Boolean) extends Label{
 
 class ChessboardView extends MainFrame {
     
+	val loadingPopup = new LoadingPopUp
+
     val chessboard = new GridPanel(8,8)
     val replyButton = new Button("Reply")
     
@@ -187,8 +214,20 @@ class ChessboardView extends MainFrame {
     def showPopUpMessage(message:String){
     	scala.swing.Dialog.showMessage(null, message, "info", Message.Info, scala.swing.Swing.EmptyIcon)
     }
-    
+
+    def showLoadingPopUp(){
+    	peer.setEnabled(false)
+    	loadingPopup.show
+    }
+
+    def hideLoadingPopUp(){
+    	peer.setEnabled(true)
+    	loadingPopup.hide
+    }
+
     resizable = false
+    centerOnScreen
     visible = true
+    
 }
 

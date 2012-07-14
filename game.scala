@@ -68,9 +68,10 @@ class Game private(val white_must_eat:Boolean){
 			Chessboard.executeMoves(chessboard.grid,Array(move),"w")
 			view.updateChessboard(chessboard)
 			// delegate to an actor opponent's reply
+			view.showLoadingPopUp
 			actor {
 				reactWithin(300){
-					case TIMEOUT => replayActions
+					case TIMEOUT => replayActions;view.hideLoadingPopUp
 				}
 			}
 		}
@@ -93,7 +94,6 @@ object Game{
 		instance
 	}
 }
-
 
 object Main extends App{
 	override def main(a:Array[String]){

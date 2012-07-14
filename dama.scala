@@ -58,7 +58,7 @@ class Chessboard{
 	
 	for(i <- 0 until 3)
 		for(box:Box <- grid(i) if(box.color == "light")){
-			box.content = new Pawn("b")
+			box.content = new KingPawn("b")
 		}
 	
 	for(i <- 5 until 8)
@@ -202,7 +202,7 @@ class Intelligence{
 			// Case in wich there is a simple opponent pawn
 			case p : Pawn if(p.player == opponent)  => {
 				val res = canEat(grid,from_x,from_y,(a:Int,b:Int) => (inc(inc(a)),inc_y(b)))
-				if(res != null) {return new Move(from_x,from_y,res._1,res._2,"eat")}
+				if(res != null) return new Move(from_x,from_y,res._1,res._2,"eat")
 			}
 			case _ => 
 		}
@@ -244,21 +244,21 @@ class Intelligence{
 				case p : KingPawn =>  {
 					if(b.x + 1 < 8){
 						if(b.y + 1 < 8){
-							val move = getKingPawnMove(grid,b.x,b.y,b.x+1,b.y+1,inc,(_+2),opponent)
+							val move = getKingPawnMove(grid,b.x,b.y,b.x+1,b.y+1,(_+1),(_+2),opponent)
 							if(move != null) moves += move
 						}
 						if(b.y - 1 > -1){
-							val move = getKingPawnMove(grid,b.x,b.y,b.x+1,b.y-1,inc,(_-2),opponent)
+							val move = getKingPawnMove(grid,b.x,b.y,b.x+1,b.y-1,(_+1),(_-2),opponent)
 							if(move != null) moves += move
 						}
 					}
 					if(b.x - 1 > 0){
 						if(b.y + 1 < 8){
-							val move = getKingPawnMove(grid,b.x,b.y,b.x-1,b.y+1,dec,(_+2),opponent)
+							val move = getKingPawnMove(grid,b.x,b.y,b.x-1,b.y+1,(_-1),(_+2),opponent)
 							if(move != null) moves += move
 						}
 						if(b.y - 1 > -1){
-							val move = getKingPawnMove(grid,b.x,b.y,b.x-1,b.y-1,dec,(_-2),opponent)
+							val move = getKingPawnMove(grid,b.x,b.y,b.x-1,b.y-1,(_-1),(_-2),opponent)
 							if(move != null) moves += move
 						}
 					}
