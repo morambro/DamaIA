@@ -110,11 +110,6 @@ class ChessboardView extends MainFrame {
 			// Posizioni pari
 			if((i+j)%2 == 0){
 				boxes(i)(j) = new ChessBox(new ImageIcon("imgs/dark_80x80.jpg"),null,false);
-				// if(i < 3)
-				// 	boxes(i)(j).top = black
-				// else if(i >= 5){
-				// 	boxes(i)(j).top = white
-				// }
 			}else{
 				boxes(i)(j) = new ChessBox(new ImageIcon("imgs/light_80x80.jpg"),null,false);
 			}

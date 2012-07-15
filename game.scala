@@ -34,12 +34,11 @@ class Game private(val white_must_eat:Boolean){
 	
 
 	def replayActions() {
-		val s = intelligence.minMax(10,chessboard.grid)
+		val s = intelligence.minMax(1,chessboard.grid)
 		print("\n"+s)
 		print("valore minmax per 'b' = "+s._1+" mossa : "); 
 		if(s._2 != null) {
-			s._2.printMove
-			Chessboard.executeMoves(chessboard.grid,Array(s._2),"b")
+			Chessboard.executeMoves(chessboard.grid,s._2,"b")
 			view.updateChessboard(chessboard)
 			chessboard.printBoard
 		} else {
@@ -59,9 +58,10 @@ class Game private(val white_must_eat:Boolean){
 		val move = new Move(x,y,to_x,to_y,"move")
 		val isValid = Chessboard.isMoveValid(chessboard.grid,move,"w","b")
 		println(white_must_eat)
-		if(white_must_eat &&  move.move_type != "eat"){
+		if(white_must_eat &&  move.move_type != "capture"){
 			val moves = intelligence.getPossibleMovesFor(chessboard.grid,"w","b")
-			if(moves.length > 0 && moves(0).move_type == "eat"){
+			// If the first element of the first move array is a captur move...
+			if(moves.length > 0 && moves(0)(0).move_type == "capture"){
 				println("LA MOSSA NON E' VALIDA PERCHE' IL GIOCATORE DEVE MANGIARE!!")
 				view.showPopUpMessage("Mossa non valida, il bianco deve mangiare!")
 				return false;
