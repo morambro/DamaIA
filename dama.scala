@@ -57,20 +57,21 @@ class Chessboard{
 	)
 	
 	//Initialization!
-	for(i <- 0 until 3)
-		for(box:Box <- grid(i) if(box.color == "dark")){
-			box.content = new Pawn("b")
-		}
+	// for(i <- 0 until 3)
+	// 	for(box:Box <- grid(i) if(box.color == "dark")){
+	// 		box.content = new Pawn("b")
+	// 	}
 	
-	for(i <- 5 until 8)
-		for(box:Box <- grid(i) if(box.color == "dark")){
-			box.content = new Pawn("w")
-		}
+	// for(i <- 5 until 8)
+	// 	for(box:Box <- grid(i) if(box.color == "dark")){
+	// 		box.content = new Pawn("w")
+	// 	}
 	 
 
-	// grid(7)(0).content = new KingPawn("b")
-	// grid(7)(2).content = new Pawn("w")
-	// grid(6)(3).content = new Pawn("w")
+	grid(6)(6).content = new Pawn("w")
+	grid(6)(4).content = new Pawn("w")
+	grid(5)(5).content = new Pawn("b")
+	grid(3)(3).content = new Pawn("b")
 
 
 	def printBoard{
@@ -180,6 +181,11 @@ class Move(val from_x:Int,val from_y:Int,val to_x:Int,val to_y:Int,var move_type
 		else if (move_type == "capture")print("Mangia")
 		println (" : da ("+from_x+","+from_y+") a ("+to_x+","+to_y+")")
 	}
+
+	override def equals(m : Any) = m match {
+		case m : Move => from_x == m.from_x && from_y == m.from_y && to_x == m.to_x && to_y == m.to_y
+	}
+	
 }
 
 import scala.collection.mutable.ListBuffer

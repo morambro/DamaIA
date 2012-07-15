@@ -57,7 +57,6 @@ class Game private(val white_must_eat:Boolean){
 	def updateChessboard(x:Int,y:Int,to_x:Int,to_y:Int): Boolean = {
 		val move = new Move(x,y,to_x,to_y,"move")
 		val isValid = Chessboard.isMoveValid(chessboard.grid,move,"w","b")
-		println(white_must_eat)
 		if(white_must_eat &&  move.move_type != "capture"){
 			val moves = intelligence.getPossibleMovesFor(chessboard.grid,"w","b")
 			// If the first element of the first move array is a captur move...
@@ -65,6 +64,27 @@ class Game private(val white_must_eat:Boolean){
 				println("LA MOSSA NON E' VALIDA PERCHE' IL GIOCATORE DEVE MANGIARE!!")
 				view.showPopUpMessage("Mossa non valida, il bianco deve mangiare!")
 				return false;
+			}
+		}
+		if(white_must_eat &&  move.move_type == "capture"){
+			val moves = intelligence.getPossibleMovesFor(chessboard.grid,"w","b")
+			if(moves.length > 0){
+				val curr = moves.filter(mv => mv.length > 0 && mv(0)==move)
+				if(curr.length > 0){
+					var max = moves(0).length
+					var max_mv = moves(0)
+					moves.foreach(m => if(m.length > max) max = m.length)
+					max_mv.foreach(m => m.printMove)
+					if(curr(0).length < max){
+						println("LA MOSSA NON E' VALIDA PERCHE' IL GIOCATORE DEVE SCEGLIERE LA MOSSA DI CATTURA PIU LUNGA")
+						view.showPopUpMessage("Mossa non valida, il bianco deve scegliere la mossa di cattura più lunga!")
+						return false;
+					}
+				}else{
+					println("LA MOSSA NON E' VALIDA PERCHE' IL GIOCATORE DEVE SCEGLIERE LA MOSSA DI CATTURA PIU LUNGA")
+					view.showPopUpMessage("Mossa non valida, il bianco deve scegliere la mossa di cattura più lunga!")
+					return false;
+				}
 			}
 		}
 		if(isValid){
