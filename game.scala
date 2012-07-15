@@ -10,7 +10,10 @@ class Game private(val white_must_eat:Boolean){
 	def view = pView
 	def view_= (view:ChessboardView) {pView = view}
 	
-	var pChessboard = new Chessboard 
+	var pChessboard = new Chessboard
+
+	view.updateChessboard(chessboard)
+
 	def chessboard = pChessboard
 	def chessboard_= (chessboard:Chessboard) {pChessboard = chessboard}
 	

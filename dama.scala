@@ -12,7 +12,7 @@ class KingPawn(player : String) extends Pawn(player)
  */
 class Box(val x:Int,val y:Int){
 	
-	var pColor = "dark"
+	var pColor = "light"
 	var pContent : Pawn = null
 	
 	def color = pColor
@@ -48,23 +48,25 @@ class Chessboard{
 	grid.foreach( row => {
 			row.map(c => 
 				odd match {
-					case true => if(c.y%2 !=1)c.color = "light"
-					case false => if(c.y%2 ==1)c.color = "light"
+					case true => if(c.y%2 !=1)c.color = "dark"
+					case false => if(c.y%2 ==1)c.color = "dark"
 				}
 			)
 			odd = !odd
 		}
 	)
 	
+	// Initialization!
 	for(i <- 0 until 3)
-		for(box:Box <- grid(i) if(box.color == "light")){
+		for(box:Box <- grid(i) if(box.color == "dark")){
 			box.content = new Pawn("b")
 		}
 	
 	for(i <- 5 until 8)
-		for(box:Box <- grid(i) if(box.color == "light")){
+		for(box:Box <- grid(i) if(box.color == "dark")){
 			box.content = new Pawn("w")
 		}
+	//grid(7)(1).content = new Pawn("b")
 		
 	def printBoard{
 		grid.foreach(row => {row.foreach( box => box printBox) ; println})
@@ -218,6 +220,7 @@ class Intelligence{
 	 */
 	private def getPawnMove(grid:Array[Array[Box]], from_x:Int, from_y:Int, x:Int, y:Int, inc:Int => Int,inc_y : Int => Int,opponent:String) : Move = {
 		/* look at what there is in the near box */
+		if(x < 0 || x > 7 || y < 0 || y > 7) return null
 		grid(x)(y).content match{
 			case null => return new Move(from_x,from_y,x,y,"move")
 			case p : KingPawn => 
@@ -235,6 +238,7 @@ class Intelligence{
 	
 	private def getKingPawnMove(grid:Array[Array[Box]], from_x:Int, from_y:Int, x:Int, y:Int, inc: Int => Int,inc_y : Int => Int,opponent:String) : Move = {
 		/* look at what there is in the near box */
+		if(x < 0 || x > 7 || y < 0 || y > 7) return null
 		grid(x)(y).content match{
 			case null => return new Move(from_x,from_y,x,y,"move")
 			// Every pawn is ok!
@@ -262,27 +266,31 @@ class Intelligence{
 		val dec = if(player == MAX) (x:Int) => x-1 else (x:Int) => x+1
 		
 		/* run over all the boxes, filtering them by content and valid increment */
-		grid.foreach( r => r.filter( b => b.content != null && b.content.player == player && inc(b.x) < 8 && inc(b.x) > -1).foreach( b =>
+		grid.foreach( r => r.filter( b => b.content != null && b.content.player == player).foreach( b =>
 			b.content match { 
 				// Check through all possible directions
 				case p : KingPawn =>  {
 					if(b.x + 1 < 8){
 						if(b.y + 1 < 8){
 							val move = getKingPawnMove(grid,b.x,b.y,b.x+1,b.y+1,(_+1),(_+2),opponent)
+							println("Mossa per giu a destra "+move)
 							if(move != null) moves += move
 						}
 						if(b.y - 1 > -1){
 							val move = getKingPawnMove(grid,b.x,b.y,b.x+1,b.y-1,(_+1),(_-2),opponent)
+							println("Mossa per giu a sinistra "+move)
 							if(move != null) moves += move
 						}
 					}
 					if(b.x - 1 > 0){
 						if(b.y + 1 < 8){
 							val move = getKingPawnMove(grid,b.x,b.y,b.x-1,b.y+1,(_-1),(_+2),opponent)
+							println("Mossa per su a destra "+move)
 							if(move != null) moves += move
 						}
 						if(b.y - 1 > -1){
 							val move = getKingPawnMove(grid,b.x,b.y,b.x-1,b.y-1,(_-1),(_-2),opponent)
+							println("Mossa per su a sinistra "+move)
 							if(move != null) moves += move
 						}
 					}
