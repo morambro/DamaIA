@@ -34,7 +34,7 @@ class Game private(val white_must_eat:Boolean){
 	
 
 	def replayActions() {
-		val s = intelligence.minMax(1,chessboard.grid)
+		val s = intelligence.minMax(10,chessboard.grid)
 		print("\n"+s)
 		print("valore minmax per 'b' = "+s._1+" mossa : "); 
 		if(s._2 != null) {
@@ -100,7 +100,7 @@ object Game{
 
 object Main extends App{
 	override def main(a:Array[String]){
-		Game.white_must_eat = false
+		//Game.white_must_eat = false
 		Game.getInstance
 	}
 }

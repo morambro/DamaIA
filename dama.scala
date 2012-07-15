@@ -57,7 +57,7 @@ class Chessboard{
 	)
 	
 	//Initialization!
-	/*for(i <- 0 until 3)
+	for(i <- 0 until 3)
 		for(box:Box <- grid(i) if(box.color == "dark")){
 			box.content = new Pawn("b")
 		}
@@ -65,14 +65,14 @@ class Chessboard{
 	for(i <- 5 until 8)
 		for(box:Box <- grid(i) if(box.color == "dark")){
 			box.content = new Pawn("w")
-		}*/
-
-	grid(0)(1).content = new Pawn("b")
-	grid(1)(2).content = new Pawn("w")
-	grid(3)(4).content = new Pawn("w")
-	grid(3)(2).content = new Pawn("w")
-	grid(6)(5).content = new Pawn("w")
+		}
 	 
+
+	// grid(7)(0).content = new KingPawn("b")
+	// grid(7)(2).content = new Pawn("w")
+	// grid(6)(3).content = new Pawn("w")
+
+
 	def printBoard{
 		grid.foreach(row => {row.foreach( box => box printBox) ; println})
 	}
@@ -213,6 +213,44 @@ class Intelligence{
 		null
 	}
 
+	private def checkForMultipleCapture(grid:Array[Array[Box]],f_x:Int,f_y:Int,inc:Int => Int) : ListBuffer[Move] = {
+		var multiple = new ListBuffer[Move]()
+		grid(f_x)(f_y).content match{
+			case null =>
+			case p:KingPawn => {
+				// TODO : Multiple moves for KingPawn
+			}
+			case p:Pawn => {
+				if(inc(f_x) < 8){
+					val res_left = canEat(grid,f_x,f_y,(a:Int,b:Int) => (inc(inc(a)),b-2))
+					val res_right = canEat(grid,f_x,f_y,(a:Int,b:Int) => (inc(inc(a)),b+2))
+					var mult_moves_left = new ListBuffer[Move]()
+					var mult_moves_right = new ListBuffer[Move]()
+					
+					if(res_left != null) {
+						mult_moves_left += new Move(f_x,f_y,res_left._1,res_left._2,"capture")
+						var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
+						Chessboard.executeMoves(new_grid,mult_moves_left.toArray,MAX)
+						// recoursive call
+						mult_moves_left = mult_moves_left ++ checkForMultipleCapture(new_grid,res_left._1,res_left._2,inc)
+					}
+					
+					if(res_right != null) {
+						mult_moves_right += new Move(f_x,f_y,res_right._1,res_right._2,"capture")
+						var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
+						Chessboard.executeMoves(new_grid,mult_moves_right.toArray,MAX)
+						// recoursive call
+						mult_moves_right = mult_moves_right ++ checkForMultipleCapture(new_grid,res_right._1,res_right._2,inc)
+					
+					}
+					if(mult_moves_right.length > mult_moves_left.length) return multiple ++ mult_moves_right
+					else return multiple ++ mult_moves_left
+				}
+			}
+		}
+		multiple
+	}
+
 	/** 
 	 * Creates the move for a simple pawngiven from-coordinates and to-coordiantes. It checks if there is a possible "capture" move.
 	 *
@@ -244,52 +282,29 @@ class Intelligence{
 		}
 		null
 	}
-
-	private def checkForMultipleCapture(grid:Array[Array[Box]],f_x:Int,f_y:Int,inc:Int => Int) : ListBuffer[Move] = {
-		var multiple = new ListBuffer[Move]()
-		grid(f_x)(f_y).content match{
-			case null =>
-			case p:KingPawn =>
-			case p:Pawn => {
-				if(inc(f_x) < 8){
-					val res_left = canEat(grid,f_x,f_y,(a:Int,b:Int) => (inc(inc(a)),b-2))
-					val res_right = canEat(grid,f_x,f_y,(a:Int,b:Int) => (inc(inc(a)),b+2))
-					var mult_moves_left = new ListBuffer[Move]()
-					var mult_moves_right = new ListBuffer[Move]()
-					if(res_left != null) {
-						mult_moves_left += new Move(f_x,f_y,res_left._1,res_left._2,"capture")
-						var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
-						Chessboard.executeMoves(new_grid,mult_moves_left.toArray,MAX)
-						
-						mult_moves_left = mult_moves_left ++ checkForMultipleCapture(new_grid,res_left._1,res_left._2,inc)
-					}
-					
-					if(res_right != null) {
-
-						mult_moves_right += new Move(f_x,f_y,res_right._1,res_right._2,"capture")
-						var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
-						Chessboard.executeMoves(new_grid,mult_moves_right.toArray,MAX)
-						
-						mult_moves_right = mult_moves_right ++ checkForMultipleCapture(new_grid,res_right._1,res_right._2,inc)
-					
-					}
-					if(mult_moves_right.length > mult_moves_left.length) return multiple ++ mult_moves_right
-					else return multiple ++ mult_moves_left
-				}
-			}
-		}
-		multiple
-	}
 	
-	private def getKingPawnMove(grid:Array[Array[Box]], from_x:Int, from_y:Int, x:Int, y:Int, inc: Int => Int,inc_y : Int => Int,opponent:String) : Move = {
+	/** 
+	 * Creates the move for a king pawn given from-coordinates and to-coordiantes. It checks if there is a possible "capture" move.
+	 *
+	 * @param grid : current configuration
+	 * @param form_x,from_y : from-coordinates
+	 * @param x,y : to-coordiantes
+	 * @param inc : function wich increments properly the x coordinate
+	 * @param inc_y : function used to increment the y coordinate when searching for an "capture" move
+	 */
+	private def getKingPawnMove(grid:Array[Array[Box]], from_x:Int, from_y:Int, x:Int, y:Int, inc: Int => Int,inc_y : Int => Int,opponent:String) : Array[Move] = {
 		/* look at what there is in the near box */
 		if(x < 0 || x > 7 || y < 0 || y > 7) return null
 		grid(x)(y).content match{
-			case null => return new Move(from_x,from_y,x,y,"move")
+			case null => return Array(new Move(from_x,from_y,x,y,"move"))
 			// Every pawn is ok!
 			case p : Pawn if(p.player == opponent)  => {
 				val res = canEat(grid,from_x,from_y,(a:Int,b:Int) => (inc(inc(a)),inc_y(b)))
-				if(res != null) return new Move(from_x,from_y,res._1,res._2,"capture") 
+				var mult_moves = new ListBuffer[Move]()
+				if(res != null) {
+					mult_moves += new Move(from_x,from_y,res._1,res._2,"capture") 
+				}
+				return mult_moves.toArray
 			}
 			case _ => 
 		}
@@ -318,21 +333,21 @@ class Intelligence{
 					if(b.x + 1 < 8){
 						if(b.y + 1 < 8){
 							val move = getKingPawnMove(grid,b.x,b.y,b.x+1,b.y+1,(_+1),(_+2),opponent)
-							if(move != null) moves += Array(move)
+							if(move != null) moves += move
 						}
 						if(b.y - 1 > -1){
 							val move = getKingPawnMove(grid,b.x,b.y,b.x+1,b.y-1,(_+1),(_-2),opponent)
-							if(move != null) moves += Array(move)
+							if(move != null) moves += move
 						}
 					}
 					if(b.x - 1 > 0){
 						if(b.y + 1 < 8){
 							val move = getKingPawnMove(grid,b.x,b.y,b.x-1,b.y+1,(_-1),(_+2),opponent)
-							if(move != null) moves += Array(move)
+							if(move != null) moves += move
 						}
 						if(b.y - 1 > -1){
 							val move = getKingPawnMove(grid,b.x,b.y,b.x-1,b.y-1,(_-1),(_-2),opponent)
-							if(move != null) moves += Array(move)
+							if(move != null) moves += move
 						}
 					}
 				}
@@ -341,7 +356,6 @@ class Intelligence{
 					if(b.y + 1 < 8) {
 						val move = getPawnMove(grid,b.x,b.y,inc(b.x),b.y+1,inc,(_+2),opponent)
 						if(move != null && move.length > 0) {
-							println(move.length)
 							moves += move
 						}
 					}
@@ -352,7 +366,7 @@ class Intelligence{
 				} 
 		}))
 		// choose al move arrays in wich the first move is a capture
-		val eat_moves = moves.filter(move => move(0).move_type == "capture")
+		val eat_moves = moves.filter(move => move.length > 0 && move(0).move_type == "capture")
 		if(eat_moves.length > 0) {
 			var length = eat_moves(0).length
 			eat_moves.foreach (m => if(m.length > length) length = m.length)
@@ -424,16 +438,27 @@ class Intelligence{
 	
 	
 	/**
-	 * Very primitive heuristic function. Evaluates the goodness of the 
-	 * situation by giving the difference between the number of pieces of 
-	 * the white player and the number of pieces of the opponent
+	 * Very primitive heuristic function. Evaluates the goodness of the situation by giving the difference between the number of 
+	 * pieces of the white player and the number of pieces of the opponent
+	 * @param player : player respect who calculate the evaluation function
+	 * @param grid : current chessboard situation 
 	 */
 	def evaluate(player:String,grid:Array[Array[Box]]) = {
 		var num_player = 0
 		var num_opponent = 0
-		grid.foreach(row => row.map(c => {
-			if(c.content != null && c.content.player == MAX) num_player+=1 
-			else if(c.content != null) num_opponent += 1
+		grid.foreach(row => row.foreach(c => {
+			if(c.content != null && c.content.player == player){
+				c.content match{
+					case _:KingPawn => num_player+=2
+					case _:Pawn => num_player+=1 
+				}
+			}
+			else if(c.content != null) {
+				c.content match{
+					case _:KingPawn => num_opponent+=2
+					case _:Pawn => num_opponent+=1 
+				}
+			}
 		}))
 		
 		num_player - num_opponent
