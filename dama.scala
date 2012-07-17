@@ -67,15 +67,12 @@ class Chessboard{
 	// 		box.content = new Pawn("w")
 	// 	}
 	 
-
-	grid(4)(4).content = new Pawn("w")
-	grid(1)(1).content = new Pawn("b")
-	grid(2)(2).content = new Pawn("w")
-	grid(4)(2).content = new Pawn("w")
-	
-	grid(6)(4).content = new Pawn("w")
-	grid(6)(6).content = new Pawn("w")
-
+	grid(0)(0).content = new Pawn("b")
+	grid(1)(1).content = new Pawn("w")
+	grid(3)(3).content = new Pawn("w")
+	grid(5)(3).content = new Pawn("w")
+	grid(5)(5).content = new Pawn("w")
+	grid(7)(1).content = new Pawn("w")
 
 	def printBoard{
 		grid.foreach(row => {row.foreach( box => box printBox) ; println})
@@ -274,7 +271,7 @@ class Intelligence{
 	 * @param f_x,f_y : current position
 	 * @param invc : increment function giving the x-direction (from top to bottom or from bottom to top)
 	 */
-	def checkForMultipleCapturePROVA(grid:Array[Array[Box]],f_x:Int,f_y:Int,inc:Int => Int,current_move : ListBuffer[Move],total_moves:ListBuffer[ListBuffer[Move]]){
+	def checkForMultipleCapture(grid:Array[Array[Box]],f_x:Int,f_y:Int,inc:Int => Int,current_move : ListBuffer[Move],total_moves:ListBuffer[ListBuffer[Move]]){
 		grid(f_x)(f_y).content match{
 			case null =>
 			case p:KingPawn => {
@@ -291,7 +288,7 @@ class Intelligence{
 						var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
 						Chessboard.executeMoves(new_grid,current_move.toArray,MAX)
 						// recoursive call
-						checkForMultipleCapturePROVA(new_grid,res_left._1,res_left._2,inc,current_move,total_moves)
+						checkForMultipleCapture(new_grid,res_left._1,res_left._2,inc,current_move,total_moves)
 					}
 					
 					if(res_right != null) {
@@ -307,7 +304,7 @@ class Intelligence{
 						var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
 						Chessboard.executeMoves(new_grid,mult_moves_right.toArray,MAX)
 						// recoursive call
-						checkForMultipleCapturePROVA(new_grid,res_right._1,res_right._2,inc,mult_moves_right,total_moves)
+						checkForMultipleCapture(new_grid,res_right._1,res_right._2,inc,mult_moves_right,total_moves)
 					
 					}
 					
@@ -346,8 +343,7 @@ class Intelligence{
 					t += new ListBuffer[Move]();t(0) += new Move(from_x,from_y,res._1,res._2,"capture")
 					var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
 					Chessboard.executeMoves(new_grid,t(0).toArray,MAX)
-					val prova = checkForMultipleCapturePROVA(new_grid,res._1,res._2,inc,t(0),t)
-
+					val prova = checkForMultipleCapture(new_grid,res._1,res._2,inc,t(0),t)
 
 				}
 				return t
@@ -434,11 +430,7 @@ class Intelligence{
 						if(move != null && move.length > 0) moves += move */
 						val moves_list = getPawnMove(grid,b.x,b.y,inc(b.x),b.y+1,inc,(_+2),opponent)
 						if(moves_list != null && moves_list.length > 0) {
-							moves_list.foreach(move => {
-								moves += move.toArray
-								move.foreach(m => m.printMove)
-								println
-							})
+							moves_list.foreach(move => moves += move.toArray)
 						}
 					}
 					if(b.y - 1 > -1) {
@@ -446,11 +438,7 @@ class Intelligence{
 						if(move != null && move.length > 0) moves += move*/
 						val moves_list = getPawnMove(grid,b.x,b.y,inc(b.x),b.y-1,inc,(_-2),opponent)
 						if(moves_list != null && moves_list.length > 0) {
-							moves_list.foreach(move =>{
-								moves += move.toArray
-								move.foreach(m => m.printMove)
-								println
-							})
+							moves_list.foreach(move => moves += move.toArray)
 						}
 					}
 				} 
@@ -484,7 +472,6 @@ class Intelligence{
 		if(depth == 0) return (evaluate(MAX,game),null)
 		
 		val moves = getPossibleMovesFor(game,MAX,MIN)
-		
 		if(moves == null || moves.length == 0) return (evaluate(MAX,game),null)
 		var best_move : (Int,Array[Move]) = null
 		var new_alpha = alpha
@@ -493,6 +480,7 @@ class Intelligence{
 			Chessboard.executeMoves(new_grid,move,MAX)
 			// tocca a Min!
 			val min_move = minMove(depth-1,new_grid,alpha,beta)
+
 			if(best_move == null || best_move._1 < min_move._1){
 				best_move = (min_move._1,move)
 				new_alpha = best_move._1
@@ -507,8 +495,10 @@ class Intelligence{
 			//println("valutazione per player (depth = 0) +"+player+" : "+evaluate(player,grid))
 			return (evaluate(MAX,game),null)
 		}
-		val moves = getPossibleMovesFor(game,MAX,MIN)
+		val moves = getPossibleMovesFor(game,MIN,MAX)
+		
 		if(moves == null || moves.length == 0) return (evaluate(MAX,game),null)
+		
 		var best_move : (Int,Array[Move]) = null
 		var new_beta = beta
 		moves.foreach(move => {
