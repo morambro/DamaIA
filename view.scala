@@ -143,10 +143,10 @@ class ChessboardView extends MainFrame {
 				            
 				        }else{
 				            //TODO: decommentare!!!!!!!!!!!!
-				            /*if(box.top == black || box.top == black_king){
+				            if(box.top == black || box.top == black_king){
 				                println("hai selezionato una pedina nera!!");
 				                return;
-				            }*/
+				            }
 				            // if the box clicked was selected, de-select it 
 				            if(box.top == white_selected){
 				                box.top = white

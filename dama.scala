@@ -269,7 +269,9 @@ class Intelligence{
 	 *
 	 * @param grid : the chessboard
 	 * @param f_x,f_y : current position
-	 * @param invc : increment function giving the x-direction (from top to bottom or from bottom to top)
+	 * @param inc : increment function giving the x-direction (from top to bottom or from bottom to top)
+	 * @param current_move : Move list to wich append new moves
+	 * @param total_moves : list of lists of moves containing all moves found (initially empty)
 	 */
 	def checkForMultipleCapture(grid:Array[Array[Box]],f_x:Int,f_y:Int,inc:Int => Int,current_move : ListBuffer[Move],total_moves:ListBuffer[ListBuffer[Move]]){
 		grid(f_x)(f_y).content match{
@@ -296,7 +298,9 @@ class Intelligence{
 						var mult_moves_right : ListBuffer[Move] = null
 						if(res_left == null) mult_moves_right = current_move
 						else {
+							// create a new ListBuffer containing common moves
 							mult_moves_right = current_move.clone;mult_moves_right.trimEnd(1)
+							// Add the new ListBuffer to total_moves
 							total_moves += mult_moves_right
 						}
 						
@@ -333,13 +337,7 @@ class Intelligence{
 			case p : Pawn if(p.player == opponent)  => {
 				var res = canEat(grid,from_x,from_y,(a:Int,b:Int) => (inc(inc(a)),inc_y(b)))
 				var t = new ListBuffer[ListBuffer[Move]]()
-				//var mult_moves = new ListBuffer[Move]()*/
 				if(res != null) {
-					/*mult_moves += new Move(from_x,from_y,res._1,res._2,"capture")
-					var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
-					Chessboard.executeMoves(new_grid,mult_moves.toArray,MAX)
-					mult_moves = mult_moves ++ checkForMultipleCapture(new_grid,res._1,res._2,inc)*/
-					
 					t += new ListBuffer[Move]();t(0) += new Move(from_x,from_y,res._1,res._2,"capture")
 					var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
 					Chessboard.executeMoves(new_grid,t(0).toArray,MAX)
@@ -347,11 +345,10 @@ class Intelligence{
 
 				}
 				return t
-				//return mult_moves.toArray
 			}
 			case _ => 
 		}
-		null
+		new ListBuffer[ListBuffer[Move]]()
 	}
 	
 	/** 
@@ -426,20 +423,14 @@ class Intelligence{
 				// Check only in one direction
 				case p : Pawn => {
 					if(b.y + 1 < 8) {
-						/*val move = getPawnMove(grid,b.x,b.y,inc(b.x),b.y+1,inc,(_+2),opponent)
-						if(move != null && move.length > 0) moves += move */
 						val moves_list = getPawnMove(grid,b.x,b.y,inc(b.x),b.y+1,inc,(_+2),opponent)
-						if(moves_list != null && moves_list.length > 0) {
-							moves_list.foreach(move => moves += move.toArray)
-						}
+						// If we have possible moves, add them in moves array
+						if(moves_list.length > 0) moves_list.foreach(move => moves += move.toArray)
 					}
 					if(b.y - 1 > -1) {
-						/*val move = getPawnMove(grid,b.x,b.y,inc(b.x),b.y-1,inc,(_-2),opponent)
-						if(move != null && move.length > 0) moves += move*/
 						val moves_list = getPawnMove(grid,b.x,b.y,inc(b.x),b.y-1,inc,(_-2),opponent)
-						if(moves_list != null && moves_list.length > 0) {
-							moves_list.foreach(move => moves += move.toArray)
-						}
+						// If we have possible moves, add them in moves array
+						if(moves_list.length > 0) moves_list.foreach(move => moves += move.toArray)
 					}
 				} 
 		}))
