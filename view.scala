@@ -94,7 +94,6 @@ class ChessboardView extends MainFrame {
     
     var boxes = Array.ofDim[ChessBox](8,8)
     
-    replyButton.enabled = false
     
     try{
         javax.swing.UIManager.getInstalledLookAndFeels.foreach(info => {

@@ -68,10 +68,13 @@ class Chessboard{
 	// 	}
 	 
 
-	grid(6)(6).content = new Pawn("w")
+	grid(4)(4).content = new Pawn("w")
+	grid(1)(1).content = new Pawn("b")
+	grid(2)(2).content = new Pawn("w")
+	grid(4)(2).content = new Pawn("w")
+	
 	grid(6)(4).content = new Pawn("w")
-	grid(5)(5).content = new Pawn("b")
-	grid(3)(3).content = new Pawn("b")
+	grid(6)(6).content = new Pawn("w")
 
 
 	def printBoard{
@@ -219,7 +222,14 @@ class Intelligence{
 		null
 	}
 
-	private def checkForMultipleCapture(grid:Array[Array[Box]],f_x:Int,f_y:Int,inc:Int => Int) : ListBuffer[Move] = {
+	/**
+	 * Inspects the chessboard searching for a multiple capture for the pawn in (f_x,f_y)
+	 *
+	 * @param grid : the chessboard
+	 * @param f_x,f_y : current position
+	 * @param invc : increment function giving the x-direction (from top to bottom or from bottom to top)
+	 */
+	/*private def checkForMultipleCapture(grid:Array[Array[Box]],f_x:Int,f_y:Int,inc:Int => Int) : ListBuffer[Move] = {
 		var multiple = new ListBuffer[Move]()
 		grid(f_x)(f_y).content match{
 			case null =>
@@ -255,7 +265,57 @@ class Intelligence{
 			}
 		}
 		multiple
+	}*/
+
+	/**
+	 * Inspects the chessboard searching for a multiple capture for the pawn in (f_x,f_y)
+	 *
+	 * @param grid : the chessboard
+	 * @param f_x,f_y : current position
+	 * @param invc : increment function giving the x-direction (from top to bottom or from bottom to top)
+	 */
+	def checkForMultipleCapturePROVA(grid:Array[Array[Box]],f_x:Int,f_y:Int,inc:Int => Int,current_move : ListBuffer[Move],total_moves:ListBuffer[ListBuffer[Move]]){
+		grid(f_x)(f_y).content match{
+			case null =>
+			case p:KingPawn => {
+				// TODO : Multiple moves for KingPawn
+			}
+			case p:Pawn => {
+				if(inc(f_x) < 8){
+					val res_left = canEat(grid,f_x,f_y,(a:Int,b:Int) => (inc(inc(a)),b-2))
+					val res_right = canEat(grid,f_x,f_y,(a:Int,b:Int) => (inc(inc(a)),b+2))
+					
+					// If i found a possible capture "on the left" add the new move to current_move
+					if(res_left != null) {
+						current_move += new Move(f_x,f_y,res_left._1,res_left._2,"capture")
+						var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
+						Chessboard.executeMoves(new_grid,current_move.toArray,MAX)
+						// recoursive call
+						checkForMultipleCapturePROVA(new_grid,res_left._1,res_left._2,inc,current_move,total_moves)
+					}
+					
+					if(res_right != null) {
+						// Create a copy of the current_move list only if there was another move on the left (separates the moves)
+						var mult_moves_right : ListBuffer[Move] = null
+						if(res_left == null) mult_moves_right = current_move
+						else {
+							mult_moves_right = current_move.clone;mult_moves_right.trimEnd(1)
+							total_moves += mult_moves_right
+						}
+						
+						mult_moves_right += new Move(f_x,f_y,res_right._1,res_right._2,"capture")
+						var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
+						Chessboard.executeMoves(new_grid,mult_moves_right.toArray,MAX)
+						// recoursive call
+						checkForMultipleCapturePROVA(new_grid,res_right._1,res_right._2,inc,mult_moves_right,total_moves)
+					
+					}
+					
+				}
+			}
+		}
 	}
+
 
 	/** 
 	 * Creates the move for a simple pawngiven from-coordinates and to-coordiantes. It checks if there is a possible "capture" move.
@@ -266,23 +326,32 @@ class Intelligence{
 	 * @param inc : function wich increments properly the x coordinate
 	 * @param inc_y : function used to increment the y coordinate when searching for an "capture" move
 	 */
-	private def getPawnMove(grid:Array[Array[Box]], from_x:Int, from_y:Int, x:Int, y:Int, inc:Int => Int,inc_y : Int => Int,opponent:String) : Array[Move] = {
+	private def getPawnMove(grid:Array[Array[Box]], from_x:Int, from_y:Int, x:Int, y:Int, inc:Int => Int,inc_y : Int => Int,opponent:String) : ListBuffer[ListBuffer[Move]] = {
 		/* look at what there is in the near box */
 		if(x < 0 || x > 7 || y < 0 || y > 7) return null
 		grid(x)(y).content match{
-			case null => return  Array(new Move(from_x,from_y,x,y,"move"))
+			case null => val b = new ListBuffer[ListBuffer[Move]]();b += ListBuffer(new Move(from_x,from_y,x,y,"move"));return b
 			case p : KingPawn => 
 			// Case in wich there is a simple opponent pawn
 			case p : Pawn if(p.player == opponent)  => {
 				var res = canEat(grid,from_x,from_y,(a:Int,b:Int) => (inc(inc(a)),inc_y(b)))
-				var mult_moves = new ListBuffer[Move]()
+				var t = new ListBuffer[ListBuffer[Move]]()
+				//var mult_moves = new ListBuffer[Move]()*/
 				if(res != null) {
-					mult_moves += new Move(from_x,from_y,res._1,res._2,"capture")
+					/*mult_moves += new Move(from_x,from_y,res._1,res._2,"capture")
 					var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
 					Chessboard.executeMoves(new_grid,mult_moves.toArray,MAX)
-					mult_moves = mult_moves ++ checkForMultipleCapture(new_grid,res._1,res._2,inc)
+					mult_moves = mult_moves ++ checkForMultipleCapture(new_grid,res._1,res._2,inc)*/
+					
+					t += new ListBuffer[Move]();t(0) += new Move(from_x,from_y,res._1,res._2,"capture")
+					var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
+					Chessboard.executeMoves(new_grid,t(0).toArray,MAX)
+					val prova = checkForMultipleCapturePROVA(new_grid,res._1,res._2,inc,t(0),t)
+
+
 				}
-				return mult_moves.toArray
+				return t
+				//return mult_moves.toArray
 			}
 			case _ => 
 		}
@@ -310,6 +379,7 @@ class Intelligence{
 				if(res != null) {
 					mult_moves += new Move(from_x,from_y,res._1,res._2,"capture") 
 				}
+
 				return mult_moves.toArray
 			}
 			case _ => 
@@ -360,14 +430,28 @@ class Intelligence{
 				// Check only in one direction
 				case p : Pawn => {
 					if(b.y + 1 < 8) {
-						val move = getPawnMove(grid,b.x,b.y,inc(b.x),b.y+1,inc,(_+2),opponent)
-						if(move != null && move.length > 0) {
-							moves += move
+						/*val move = getPawnMove(grid,b.x,b.y,inc(b.x),b.y+1,inc,(_+2),opponent)
+						if(move != null && move.length > 0) moves += move */
+						val moves_list = getPawnMove(grid,b.x,b.y,inc(b.x),b.y+1,inc,(_+2),opponent)
+						if(moves_list != null && moves_list.length > 0) {
+							moves_list.foreach(move => {
+								moves += move.toArray
+								move.foreach(m => m.printMove)
+								println
+							})
 						}
 					}
 					if(b.y - 1 > -1) {
-						val move = getPawnMove(grid,b.x,b.y,inc(b.x),b.y-1,inc,(_-2),opponent)
-						if(move != null && move.length > 0) moves += move
+						/*val move = getPawnMove(grid,b.x,b.y,inc(b.x),b.y-1,inc,(_-2),opponent)
+						if(move != null && move.length > 0) moves += move*/
+						val moves_list = getPawnMove(grid,b.x,b.y,inc(b.x),b.y-1,inc,(_-2),opponent)
+						if(moves_list != null && moves_list.length > 0) {
+							moves_list.foreach(move =>{
+								moves += move.toArray
+								move.foreach(m => m.printMove)
+								println
+							})
+						}
 					}
 				} 
 		}))
