@@ -57,22 +57,22 @@ class Chessboard{
 	)
 	
 	//Initialization!
-	// for(i <- 0 until 3)
-	// 	for(box:Box <- grid(i) if(box.color == "dark")){
-	// 		box.content = new Pawn("b")
-	// 	}
+	for(i <- 0 until 3)
+		for(box:Box <- grid(i) if(box.color == "dark")){
+			box.content = new Pawn("b")
+		}
 	
-	// for(i <- 5 until 8)
-	// 	for(box:Box <- grid(i) if(box.color == "dark")){
-	// 		box.content = new Pawn("w")
-	// 	}
+	for(i <- 5 until 8)
+		for(box:Box <- grid(i) if(box.color == "dark")){
+			box.content = new Pawn("w")
+		}
 	 
-	grid(0)(0).content = new Pawn("b")
-	grid(1)(1).content = new Pawn("w")
-	grid(3)(3).content = new Pawn("w")
-	grid(5)(3).content = new Pawn("w")
-	grid(5)(5).content = new Pawn("w")
-	grid(7)(1).content = new Pawn("w")
+	// grid(0)(0).content = new Pawn("b")
+	// grid(1)(1).content = new Pawn("w")
+	// grid(3)(3).content = new Pawn("w")
+	// grid(5)(3).content = new Pawn("w")
+	// grid(5)(5).content = new Pawn("w")
+	// grid(7)(1).content = new Pawn("w")
 
 	def printBoard{
 		grid.foreach(row => {row.foreach( box => box printBox) ; println})
@@ -137,12 +137,15 @@ object Chessboard{
 				}
 				// check whether the given move is instead an "capture" move. Changes the move_type field's value and return true 
 				if(abs(m.from_x - m.to_x) == 2 && abs(m.from_y - m.to_y) == 2) {
-					if(grid(m.to_x)(m.to_y).content==null) 
-						if(grid((m.from_x+m.to_x)/2)((m.from_y+m.to_y)/2).content.player == opponent) {
+					if(grid(m.to_x)(m.to_y).content==null) {
+						val mid_x = (m.from_x+m.to_x)/2 
+						val mid_y = (m.from_y+m.to_y)/2
+						if(grid(mid_x)(mid_y).content.player == opponent) {
 								// Case Pawn or KingPawn, is the same
 							m.move_type = "capture"
 							return true
 						}
+					}
 				}
 			}
 			// Case of simple pawn
