@@ -213,6 +213,7 @@ class Intelligence{
 				case p : KingPawn => grid((x+new_x)/2)((y+new_y)/2).content match {
 					case null =>
 					case s : Pawn if(p.player != s.player) => return (new_x,new_y)
+					case _ =>
 				}	
 				case p : Pawn => grid((x+new_x)/2)((y+new_y)/2).content match {
 						case _ : KingPawn => 
@@ -230,51 +231,6 @@ class Intelligence{
 	 *
 	 * @param grid : the chessboard
 	 * @param f_x,f_y : current position
-	 * @param invc : increment function giving the x-direction (from top to bottom or from bottom to top)
-	 */
-	/*private def checkForMultipleCapture(grid:Array[Array[Box]],f_x:Int,f_y:Int,inc:Int => Int) : ListBuffer[Move] = {
-		var multiple = new ListBuffer[Move]()
-		grid(f_x)(f_y).content match{
-			case null =>
-			case p:KingPawn => {
-				// TODO : Multiple moves for KingPawn
-			}
-			case p:Pawn => {
-				if(inc(f_x) < 8){
-					val res_left = canEat(grid,f_x,f_y,(a:Int,b:Int) => (inc(inc(a)),b-2))
-					val res_right = canEat(grid,f_x,f_y,(a:Int,b:Int) => (inc(inc(a)),b+2))
-					var mult_moves_left = new ListBuffer[Move]()
-					var mult_moves_right = new ListBuffer[Move]()
-					
-					if(res_left != null) {
-						mult_moves_left += new Move(f_x,f_y,res_left._1,res_left._2,"capture")
-						var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
-						Chessboard.executeMoves(new_grid,mult_moves_left.toArray,MAX)
-						// recoursive call
-						mult_moves_left = mult_moves_left ++ checkForMultipleCapture(new_grid,res_left._1,res_left._2,inc)
-					}
-					
-					if(res_right != null) {
-						mult_moves_right += new Move(f_x,f_y,res_right._1,res_right._2,"capture")
-						var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
-						Chessboard.executeMoves(new_grid,mult_moves_right.toArray,MAX)
-						// recoursive call
-						mult_moves_right = mult_moves_right ++ checkForMultipleCapture(new_grid,res_right._1,res_right._2,inc)
-					
-					}
-					if(mult_moves_right.length > mult_moves_left.length) return multiple ++ mult_moves_right
-					else return multiple ++ mult_moves_left
-				}
-			}
-		}
-		multiple
-	}*/
-
-	/**
-	 * Inspects the chessboard searching for a multiple capture for the pawn in (f_x,f_y)
-	 *
-	 * @param grid : the chessboard
-	 * @param f_x,f_y : current position
 	 * @param inc : increment function giving the x-direction (from top to bottom or from bottom to top)
 	 * @param current_move : Move list to wich append new moves
 	 * @param total_moves : list of lists of moves containing all moves found (initially empty)
@@ -283,107 +239,100 @@ class Intelligence{
 		grid(f_x)(f_y).content match{
 			case null =>
 			case p:KingPawn => {
-				if(f_x + 1 < 8){
-					val res_left = canEat(grid,f_x,f_y,(a:Int,b:Int) => (a+2,b-2))
-					val res_right = canEat(grid,f_x,f_y,(a:Int,b:Int) => (a+2,b+2))
-					val res_up_right = canEat(grid,f_x,f_y,(a:Int,b:Int) => (a-2,b+2))
-					val res_up_left = canEat(grid,f_x,f_y,(a:Int,b:Int) => (a-2,b-2))
-					
-					// If i found a possible capture "on the left" add the new move to current_move
-					if(res_left != null) {
-						current_move += new Move(f_x,f_y,res_left._1,res_left._2,"capture")
-						var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
-						Chessboard.executeMoves(new_grid,current_move.toArray,MAX)
-						// recoursive call
-						checkForMultipleCapture(new_grid,res_left._1,res_left._2,(_+1),current_move,total_moves)
+				val res_left = canEat(grid,f_x,f_y,(a:Int,b:Int) => (a+2,b-2))
+				val res_right = canEat(grid,f_x,f_y,(a:Int,b:Int) => (a+2,b+2))
+				val res_up_right = canEat(grid,f_x,f_y,(a:Int,b:Int) => (a-2,b+2))
+				val res_up_left = canEat(grid,f_x,f_y,(a:Int,b:Int) => (a-2,b-2))
+				
+				// If i found a possible capture "on the left" add the new move to current_move
+				if(res_left != null) {
+					current_move += new Move(f_x,f_y,res_left._1,res_left._2,"capture")
+					var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
+					Chessboard.executeMoves(new_grid,current_move.toArray,MAX)
+					// recoursive call
+					checkForMultipleCapture(new_grid,res_left._1,res_left._2,(_+1),current_move,total_moves)
+				}
+				
+				if(res_right != null) {
+					// Create a copy of the current_move list only if there was another move on the left (separates the moves)
+					var mult_moves_right : ListBuffer[Move] = null
+					if(res_left == null) mult_moves_right = current_move
+					else {
+						// create a new ListBuffer containing common moves
+						mult_moves_right = current_move.clone;mult_moves_right.trimEnd(1)
+						// Add the new ListBuffer to total_moves
+						total_moves += mult_moves_right
 					}
 					
-					if(res_right != null) {
-						// Create a copy of the current_move list only if there was another move on the left (separates the moves)
-						var mult_moves_right : ListBuffer[Move] = null
-						if(res_left == null) mult_moves_right = current_move
-						else {
-							// create a new ListBuffer containing common moves
-							mult_moves_right = current_move.clone;mult_moves_right.trimEnd(1)
-							// Add the new ListBuffer to total_moves
-							total_moves += mult_moves_right
-						}
-						
-						mult_moves_right += new Move(f_x,f_y,res_right._1,res_right._2,"capture")
-						var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
-						Chessboard.executeMoves(new_grid,mult_moves_right.toArray,MAX)
-						// recoursive call
-						checkForMultipleCapture(new_grid,res_right._1,res_right._2,(_+1),mult_moves_right,total_moves)
-					
-					}
+					mult_moves_right += new Move(f_x,f_y,res_right._1,res_right._2,"capture")
+					var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
+					Chessboard.executeMoves(new_grid,mult_moves_right.toArray,MAX)
+					// recoursive call
+					checkForMultipleCapture(new_grid,res_right._1,res_right._2,(_+1),mult_moves_right,total_moves)
+				
+				}
 
-					if(res_up_left != null){
-						var mult_moves_right : ListBuffer[Move] = null
-						if(res_right != null || res_left != null){
-							// create a new ListBuffer containing common moves
-							mult_moves_right = current_move.clone;mult_moves_right.trimEnd(1)
-							// Add the new ListBuffer to total_moves
-							total_moves += mult_moves_right
-						}else mult_moves_right = current_move
+				if(res_up_left != null){
+					var mult_moves_right : ListBuffer[Move] = null
+					if(res_right != null || res_left != null){
+						// create a new ListBuffer containing common moves
+						mult_moves_right = current_move.clone;mult_moves_right.trimEnd(1)
+						// Add the new ListBuffer to total_moves
+						total_moves += mult_moves_right
+					}else mult_moves_right = current_move
 
-						mult_moves_right += new Move(f_x,f_y,res_up_left._1,res_up_left._2,"capture")
-						var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
-						Chessboard.executeMoves(new_grid,mult_moves_right.toArray,MAX)
-						// recoursive call
-						checkForMultipleCapture(new_grid,res_up_left._1,res_up_left._2,(_-1),mult_moves_right,total_moves)
-					}
+					mult_moves_right += new Move(f_x,f_y,res_up_left._1,res_up_left._2,"capture")
+					var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
+					Chessboard.executeMoves(new_grid,mult_moves_right.toArray,MAX)
+					// recoursive call
+					checkForMultipleCapture(new_grid,res_up_left._1,res_up_left._2,(_-1),mult_moves_right,total_moves)
+				}
 
-					if(res_up_right != null){
-						var mult_moves_right : ListBuffer[Move] = null
-						if(res_right != null || res_left != null || res_up_left != null){
-							// create a new ListBuffer containing common moves
-							mult_moves_right = current_move.clone;mult_moves_right.trimEnd(1)
-							// Add the new ListBuffer to total_moves
-							total_moves += mult_moves_right
-						}else mult_moves_right = current_move
+				if(res_up_right != null){
+					var mult_moves_right : ListBuffer[Move] = null
+					if(res_right != null || res_left != null || res_up_left != null){
+						// create a new ListBuffer containing common moves
+						mult_moves_right = current_move.clone;mult_moves_right.trimEnd(1)
+						// Add the new ListBuffer to total_moves
+						total_moves += mult_moves_right
+					}else mult_moves_right = current_move
 
-						mult_moves_right += new Move(f_x,f_y,res_up_right._1,res_up_right._2,"capture")
-						var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
-						Chessboard.executeMoves(new_grid,mult_moves_right.toArray,MAX)
-						// recoursive call
-						checkForMultipleCapture(new_grid,res_up_right._1,res_up_right._2,(_-1),mult_moves_right,total_moves)
-					}
-					
+					mult_moves_right += new Move(f_x,f_y,res_up_right._1,res_up_right._2,"capture")
+					var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
+					Chessboard.executeMoves(new_grid,mult_moves_right.toArray,MAX)
+					// recoursive call
+					checkForMultipleCapture(new_grid,res_up_right._1,res_up_right._2,(_-1),mult_moves_right,total_moves)
 				}
 			}
 			case p:Pawn => {
-				if(inc(f_x) < 8){
-					val res_left = canEat(grid,f_x,f_y,(a:Int,b:Int) => (inc(inc(a)),b-2))
-					val res_right = canEat(grid,f_x,f_y,(a:Int,b:Int) => (inc(inc(a)),b+2))
-					
-					// If i found a possible capture "on the left" add the new move to current_move
-					if(res_left != null) {
-						current_move += new Move(f_x,f_y,res_left._1,res_left._2,"capture")
-						var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
-						Chessboard.executeMoves(new_grid,current_move.toArray,MAX)
-						// recoursive call
-						checkForMultipleCapture(new_grid,res_left._1,res_left._2,inc,current_move,total_moves)
+				val res_left = canEat(grid,f_x,f_y,(a:Int,b:Int) => (inc(inc(a)),b-2))
+				val res_right = canEat(grid,f_x,f_y,(a:Int,b:Int) => (inc(inc(a)),b+2))
+				
+				// If i found a possible capture "on the left" add the new move to current_move
+				if(res_left != null) {
+					current_move += new Move(f_x,f_y,res_left._1,res_left._2,"capture")
+					var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
+					Chessboard.executeMoves(new_grid,current_move.toArray,MAX)
+					// recoursive call
+					checkForMultipleCapture(new_grid,res_left._1,res_left._2,inc,current_move,total_moves)
+				}
+				
+				if(res_right != null) {
+					// Create a copy of the current_move list only if there was another move on the left (separates the moves)
+					var mult_moves_right : ListBuffer[Move] = null
+					if(res_left == null) mult_moves_right = current_move
+					else {
+						// create a new ListBuffer containing common moves
+						mult_moves_right = current_move.clone;mult_moves_right.trimEnd(1)
+						// Add the new ListBuffer to total_moves
+						total_moves += mult_moves_right
 					}
 					
-					if(res_right != null) {
-						// Create a copy of the current_move list only if there was another move on the left (separates the moves)
-						var mult_moves_right : ListBuffer[Move] = null
-						if(res_left == null) mult_moves_right = current_move
-						else {
-							// create a new ListBuffer containing common moves
-							mult_moves_right = current_move.clone;mult_moves_right.trimEnd(1)
-							// Add the new ListBuffer to total_moves
-							total_moves += mult_moves_right
-						}
-						
-						mult_moves_right += new Move(f_x,f_y,res_right._1,res_right._2,"capture")
-						var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
-						Chessboard.executeMoves(new_grid,mult_moves_right.toArray,MAX)
-						// recoursive call
-						checkForMultipleCapture(new_grid,res_right._1,res_right._2,inc,mult_moves_right,total_moves)
-					
-					}
-					
+					mult_moves_right += new Move(f_x,f_y,res_right._1,res_right._2,"capture")
+					var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
+					Chessboard.executeMoves(new_grid,mult_moves_right.toArray,MAX)
+					// recoursive call
+					checkForMultipleCapture(new_grid,res_right._1,res_right._2,inc,mult_moves_right,total_moves)
 				}
 			}
 		}
@@ -445,9 +394,7 @@ class Intelligence{
 					var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(grid(x)(y)))
 					Chessboard.executeMoves(new_grid,mult_moves(0).toArray,MAX)
 					checkForMultipleCapture(new_grid,res._1,res._2,inc,mult_moves(0),mult_moves)
-					
 				}
-
 				return mult_moves
 			}
 			case _ => 
@@ -474,41 +421,23 @@ class Intelligence{
 			b.content match { 
 				// Check through all possible directions
 				case p : KingPawn =>  {
-					if(b.x + 1 < 8){
-						if(b.y + 1 < 8){
-							val res_moves : ListBuffer[ListBuffer[Move]] = getKingPawnMove(grid,b.x,b.y,b.x+1,b.y+1,(_+1),(_+2),opponent)
-							if(res_moves != null && res_moves.length > 0) {
-								res_moves.foreach(m => moves+=m.toArray)
-							}
-						}
-						if(b.y - 1 > -1){
-							val res_moves = getKingPawnMove(grid,b.x,b.y,b.x+1,b.y-1,(_+1),(_-2),opponent)
-							if(res_moves != null && res_moves.length > 0) res_moves.foreach(m => moves+=m.toArray)
-						}
-					}
-					if(b.x - 1 > 0){
-						if(b.y + 1 < 8){
-							val res_moves = getKingPawnMove(grid,b.x,b.y,b.x-1,b.y+1,(_-1),(_+2),opponent)
-							if(res_moves != null && res_moves.length > 0) res_moves.foreach(m => moves+=m.toArray)
-						}
-						if(b.y - 1 > -1){
-							val res_moves = getKingPawnMove(grid,b.x,b.y,b.x-1,b.y-1,(_-1),(_-2),opponent)
-							if(res_moves != null && res_moves.length > 0) res_moves.foreach(m => moves+=m.toArray)
-						}
-					}
+					val res_moves : ListBuffer[ListBuffer[Move]] = getKingPawnMove(grid,b.x,b.y,b.x+1,b.y+1,(_+1),(_+2),opponent)
+					if(res_moves != null && res_moves.length > 0) res_moves.foreach(m => moves+=m.toArray)
+					val res_moves2 = getKingPawnMove(grid,b.x,b.y,b.x+1,b.y-1,(_+1),(_-2),opponent)
+					if(res_moves2 != null && res_moves2.length > 0) res_moves2.foreach(m => moves+=m.toArray)
+					val res_moves3 = getKingPawnMove(grid,b.x,b.y,b.x-1,b.y+1,(_-1),(_+2),opponent)
+					if(res_moves3 != null && res_moves3.length > 0) res_moves3.foreach(m => moves+=m.toArray)
+					val res_moves4 = getKingPawnMove(grid,b.x,b.y,b.x-1,b.y-1,(_-1),(_-2),opponent)
+					if(res_moves4 != null && res_moves4.length > 0) res_moves4.foreach(m => moves+=m.toArray)
 				}
 				// Check only in one direction
 				case p : Pawn => {
-					if(b.y + 1 < 8) {
-						val moves_list = getPawnMove(grid,b.x,b.y,inc(b.x),b.y+1,inc,(_+2),opponent)
-						// If we have possible moves, add them in moves array
-						if(moves_list!=null && moves_list.length > 0) moves_list.foreach(move => moves += move.toArray)
-					}
-					if(b.y - 1 > -1) {
-						val moves_list = getPawnMove(grid,b.x,b.y,inc(b.x),b.y-1,inc,(_-2),opponent)
-						// If we have possible moves, add them in moves array
-						if(moves_list!=null && moves_list.length > 0) moves_list.foreach(move => moves += move.toArray)
-					}
+					val res_moves = getPawnMove(grid,b.x,b.y,inc(b.x),b.y+1,inc,(_+2),opponent)
+					// If we have possible moves, add them in moves array
+					if(res_moves!=null && res_moves.length > 0) res_moves.foreach(move => moves += move.toArray)
+					val res_moves2 = getPawnMove(grid,b.x,b.y,inc(b.x),b.y-1,inc,(_-2),opponent)
+					// If we have possible moves, add them in moves array
+					if(res_moves2!=null && res_moves2.length > 0) res_moves2.foreach(move => moves += move.toArray)
 				} 
 		}))
 		// choose al move arrays in wich the first move is a capture
