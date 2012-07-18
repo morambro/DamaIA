@@ -1,3 +1,6 @@
+import scala.util.Random
+import java.util.Calendar
+
 class Pawn(val player:String){
 	
 	override def equals(o : Any) = o match{case p:Pawn => player==p.player}
@@ -470,10 +473,10 @@ class Intelligence{
 	}
 	
 	def maxMove(depth : Int, game : Array[Array[Box]], alpha : Int, beta : Int) : (Int,Array[Move]) = {
-		if(depth == 0) return (evaluate(MAX,game),null)
+		if(depth == 0) return (evaluate2(MAX,game),null)
 		
 		val moves = getPossibleMovesFor(game,MAX,MIN)
-		if(moves == null || moves.length == 0) return (evaluate(MAX,game),null)
+		if(moves == null || moves.length == 0) return (evaluate2(MAX,game),null)
 		var best_move : (Int,Array[Move]) = null
 		var new_alpha = alpha
 		moves.foreach(move => {
@@ -493,12 +496,12 @@ class Intelligence{
 
 	def minMove(depth : Int,game : Array[Array[Box]], alpha : Int, beta : Int) : (Int,Array[Move]) = {
 		if(depth == 0) {
-			//println("valutazione per player (depth = 0) +"+player+" : "+evaluate(player,grid))
-			return (evaluate(MAX,game),null)
+			//println("valutazione per player (depth = 0) +"+player+" : "+evaluate2(player,grid))
+			return (evaluate2(MAX,game),null)
 		}
 		val moves = getPossibleMovesFor(game,MIN,MAX)
 		
-		if(moves == null || moves.length == 0) return (evaluate(MAX,game),null)
+		if(moves == null || moves.length == 0) return (evaluate2(MAX,game),null)
 		
 		var best_move : (Int,Array[Move]) = null
 		var new_beta = beta
@@ -546,8 +549,50 @@ class Intelligence{
 	}
 
 	def evaluate2(player:String,grid:Array[Array[Box]]) = {
-		for(i <- 0 until 8)
-			for(j <- 0 until 8)
-				grid(j)(i) ...
-	}			
+		var score = 0
+		for(i <- 0 until 8){
+			for(j <- 0 until 8){
+				var c=grid(j)(i)
+				if(c.content!=null && c.content.player == player){
+					c.content match{
+						case _:KingPawn => {
+							score+=Intelligence.KINGPAWN
+							if (i==0 || i==7)
+				  				score -= Intelligence.EDGE
+			  				if (j==0 || j==7)
+				  				score -= Intelligence.EDGE
+						}
+						case _:Pawn => {
+							score+=Intelligence.PAWN
+							score+=Intelligence.POS*(7-i)*(7-i)
+						} 
+					}
+				}
+				else if(c.content != null) {
+					c.content match{
+						case _:KingPawn => {
+							score-=Intelligence.KINGPAWN
+							if (i==0 || i==7)
+				  				score += Intelligence.EDGE
+			  				if (j==0 || j==7)
+				  				score += Intelligence.EDGE
+						}
+						case _:Pawn => {
+							score-=Intelligence.PAWN
+							score-=Intelligence.POS*i*i
+						}
+					}
+				}
+			}
+		}
+		score
+	}
+
+	object Intelligence{
+		val PAWN = 100
+		val KINGPAWN = 200
+		val POS = 1
+		val EDGE = 10
+		val RANDOM_WEIGHT=10
+	}
 }
