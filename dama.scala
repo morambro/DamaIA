@@ -57,7 +57,7 @@ class Chessboard{
 	)
 	
 	//Initialization!
-	for(i <- 0 until 3)
+	/*for(i <- 0 until 3)
 		for(box:Box <- grid(i) if(box.color == "dark")){
 			box.content = new Pawn("b")
 		}
@@ -65,19 +65,19 @@ class Chessboard{
 	for(i <- 5 until 8)
 		for(box:Box <- grid(i) if(box.color == "dark")){
 			box.content = new Pawn("w")
-		}
+		}*/
 	 
 	/*grid(0)(0).content = new KingPawn("b")
 	grid(1)(1).content = new Pawn("w")
 	grid(3)(3).content = new Pawn("w")
 	grid(1)(3).content = new KingPawn("w")
-	grid(1)(5).content = new Pawn("w")
+	grid(1)(5).content = new Pawn("w")*/
 	
 	grid(6)(6).content = new Pawn("w")
 	grid(5)(5).content = new Pawn("b")
 	grid(3)(3).content = new Pawn("b")
 	grid(3)(5).content = new Pawn("b")
-	grid(1)(5).content = new Pawn("b")*/
+	grid(1)(5).content = new Pawn("b")
 
 	def printBoard{
 		grid.foreach(row => {row.foreach( box => box printBox) ; println})
@@ -545,9 +545,5 @@ class Intelligence{
 		num_player - num_opponent
 	}
 
-	def evaluate2(player:String,grid:Array[Array[Box]]) = {
-		for(i <- 0 until 8)
-			for(j <- 0 until 8)
-				grid(j)(i) ...
-	}			
+
 }
