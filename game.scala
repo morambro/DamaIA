@@ -1,5 +1,6 @@
 import scala.actors._
 import scala.actors.Actor._
+import scala.collection.mutable.ListBuffer
 /**
  * Logic class which coordinates the different parts of the game. It offers also methods callable by the View.
  *
@@ -19,7 +20,9 @@ class Game private(val white_must_eat:Boolean){
 	
 	val intelligence = new Intelligence
 	
-	private var current_user_moves : Array[Array[Move]] = null
+
+	var multiple_moves : Array[Array[Move]] = null
+	var finished = true
 
 	view.setOperationForChessboard(
 		(x,y,i,j) => updateChessboard(x,y,i,j)
@@ -33,10 +36,12 @@ class Game private(val white_must_eat:Boolean){
 			replayActions
 		}
 	})
+
+	view.setNewGameAction({_ => Game.newGame })
 	
 
 	def replayActions() {
-		val s = intelligence.minMax(10,chessboard.grid)
+		val s = intelligence.minMax(view.getDepth,chessboard.grid)
 		print("\n"+s)
 		print("valore minmax per 'b' = "+s._1+" mossa : "); 
 		if(s._2 != null) {
@@ -62,6 +67,7 @@ class Game private(val white_must_eat:Boolean){
 		// Force user to choose a "capture" move
 
 		if(isValid){
+			
 			if(white_must_eat &&  move.move_type != "capture"){
 				val moves = intelligence.getPossibleMovesFor(chessboard.grid,"w","b")
 				// If the first element of the first move array is a captur move...
@@ -74,9 +80,11 @@ class Game private(val white_must_eat:Boolean){
 			// Force user to choose longest "capture" move 
 			if(white_must_eat &&  move.move_type == "capture"){
 				val moves = intelligence.getPossibleMovesFor(chessboard.grid,"w","b")
+				
 				if(moves.length > 0){
 					// curr contains all (multiple) moves which first move is 'move'.
 					val curr = moves.filter(mv => mv.length > 0 && mv(0) == move)
+
 					if(curr.length > 0){
 						var max = moves(0).length
 						moves.foreach(m => if(m.length > max) max = m.length)
@@ -87,6 +95,17 @@ class Game private(val white_must_eat:Boolean){
 							return false
 						}
 						
+						// update multiple moves to see if white user has multiple moves to do 
+						if (multiple_moves == null) multiple_moves = curr.filter(m => m.length == max)
+						multiple_moves = multiple_moves.map(move_array =>
+							if(move_array!=null && move_array(0) == move) move_array.drop(1) else null
+						)
+
+						// Check if has finished 
+						finished = true
+						multiple_moves.foreach(m => if(m!=null && m.length > 0) finished = false)
+						println("finished? "+finished)
+
 					}else{
 						println("LA MOSSA NON E' VALIDA PERCHE' IL GIOCATORE DEVE SCEGLIERE LA MOSSA DI CATTURA PIU LUNGA")
 						view.showPopUpMessage("Mossa non valida, il bianco deve scegliere la mossa di cattura più lunga!")
@@ -94,14 +113,21 @@ class Game private(val white_must_eat:Boolean){
 					}
 				}
 			}
+			
 			Chessboard.executeMoves(chessboard.grid,Array(move),"w")
 			view.updateChessboard(chessboard)
-			// delegate to an actor opponent's reply
-			view.showLoadingPopUp
-			actor {
-				reactWithin(300){
-					case TIMEOUT => replayActions;view.hideLoadingPopUp
+			if (finished) {
+				view.setStatus("b","Black moves")
+				multiple_moves = null
+				// delegate to an actor opponent's reply
+				view.showLoadingPopUp
+				actor {
+					reactWithin(300){
+						case TIMEOUT => replayActions;view.hideLoadingPopUp;view.setStatus("w","White moves")
+					}
 				}
+			}else{
+				multiple_moves.foreach(a => {if(a!=null) a.foreach(m => m.printMove);println})
 			}
 		}
 		isValid
@@ -122,6 +148,9 @@ object Game{
 		if(instance == null) instance = new Game(white_must_eat)	
 		instance
 	}
+
+	def newGame() {instance.chessboard = new Chessboard;instance.view.updateChessboard(instance.chessboard) }
+
 }
 
 object Main extends App{

@@ -4,9 +4,15 @@ import scala.swing.Button
 import scala.swing.BorderPanel
 import scala.swing.MainFrame
 import scala.swing.Label
+import scala.swing.Menu
+import scala.swing.MenuBar
+import scala.swing.MenuItem
 import scala.swing.Dialog
 import scala.swing.Window
+import scala.swing.ComboBox
 import scala.swing.Frame
+import scala.swing.Color
+import scala.swing.Separator
 import scala.swing.event._
 
 import java.io.File
@@ -67,13 +73,27 @@ class ChessBox(bk:Icon,var top_img:Image,var selected:Boolean) extends Label{
 
 class ChessboardView extends MainFrame {
     
+	title = "Gioco della Dama"
+
 	val loadingPopup = new LoadingPopUp
 
     val chessboard = new GridPanel(8,8)
     val replyButton = new Button("Reply")
     
+    val depth_box = new ComboBox[Int](List(10,8,6,4,2,1))
+    val eval_func = new ComboBox[String](List("dummy"))
 
-    var white : Image = null
+    depth_box.minimumSize = new Dimension(70,25)
+    depth_box.maximumSize = new Dimension(70,25)
+    depth_box.preferredSize = new Dimension(70,25)
+
+    val status = new Label
+    setStatus("w","White moves")
+   	status.minimumSize = new Dimension(100,30)
+    status.maximumSize = new Dimension(100,30)
+    status.preferredSize = new Dimension(100,30)
+
+	var white : Image = null
     var black : Image = null
     var white_selected : Image = null
     var white_king : Image = null
@@ -116,6 +136,8 @@ class ChessboardView extends MainFrame {
 		}
  	}
     
+ 	def getDepth = depth_box.selection.item
+
     def setOperationForChessboard( op : (Int,Int,Int,Int) => Boolean) {
 	   	for(i <- 0 until 8)
 	   		for(j <- 0 until 8){
@@ -166,14 +188,44 @@ class ChessboardView extends MainFrame {
 			}
     }
     
+   val newgame = new MenuItem("Nuova partita")
+
     contents = new BorderPanel{
+    	add(new MenuBar {
+			contents += new Menu("Menu") {		    	
+		    	contents += newgame
+			}
+		},BorderPanel.Position.North)
     	add(chessboard, BorderPanel.Position.Center)
+		//add(new FlowPanel(){contents += replyButton}, BorderPanel.Position.South)
 		add(new FlowPanel(){
-			contents += replyButton
+			contents += new Label("Status : ")
+			contents += status
+			contents += new Separator
+			contents += new Label("Profondità ricerca : ")
+			contents += depth_box 
+			contents += new Label("Funzione di valutazione : ")
+			contents += eval_func
 		}, BorderPanel.Position.South)
     }
     
     
+    def setNewGameAction(op : Unit => Unit){
+		newgame.listenTo(newgame)
+    	newgame.reactions+={
+		 	case e : ButtonClicked => {
+		 		val response = scala.swing.Dialog.showConfirmation(null, "Sei sicuro?", "Nuova partita",Options.YesNo, Message.Question,scala.swing.Swing.EmptyIcon)
+		 		if(response == scala.swing.Dialog.Result.Yes) op()
+			}
+		}
+    }
+
+    def setStatus(t:String,m : String){
+    	status.text = m
+    	if(t == "w") status.foreground = new Color(0,255,0) 
+    	else  status.foreground = new Color(255,0,0)
+    }
+
     /**
      * Method used to set the operation to be done when reply button is clicked
      */

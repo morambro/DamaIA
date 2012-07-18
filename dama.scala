@@ -57,7 +57,7 @@ class Chessboard{
 	)
 	
 	//Initialization!
-	/*for(i <- 0 until 3)
+	for(i <- 0 until 3)
 		for(box:Box <- grid(i) if(box.color == "dark")){
 			box.content = new Pawn("b")
 		}
@@ -65,14 +65,19 @@ class Chessboard{
 	for(i <- 5 until 8)
 		for(box:Box <- grid(i) if(box.color == "dark")){
 			box.content = new Pawn("w")
-		}*/
+		}
 	 
-	grid(0)(0).content = new KingPawn("b")
+	/*grid(0)(0).content = new KingPawn("b")
 	grid(1)(1).content = new Pawn("w")
 	grid(3)(3).content = new Pawn("w")
 	grid(1)(3).content = new KingPawn("w")
 	grid(1)(5).content = new Pawn("w")
-
+	
+	grid(6)(6).content = new Pawn("w")
+	grid(5)(5).content = new Pawn("b")
+	grid(3)(3).content = new Pawn("b")
+	grid(3)(5).content = new Pawn("b")
+	grid(1)(5).content = new Pawn("b")*/
 
 	def printBoard{
 		grid.foreach(row => {row.foreach( box => box printBox) ; println})
@@ -84,7 +89,7 @@ class Chessboard{
  */
 object Chessboard{
 
-	def move(grid:Array[Array[Box]],form_x:Int,from_y:Int,to_x:Int,to_y:Int,player:String):Boolean = {
+	def move(grid:Array[Array[Box]],form_x:Int,from_y:Int,to_x:Int,to_y:Int):Boolean = {
 		if(grid(form_x)(from_y).content != null){
 			grid(to_x)(to_y).content = grid(form_x)(from_y).content
 			grid(form_x)(from_y).content = null
@@ -95,7 +100,7 @@ object Chessboard{
 	
 	def executeMoves(grid:Array[Array[Box]],moves : Array[Move],player : String){
 		moves.foreach(m => {
-			move(grid,m.from_x,m.from_y,m.to_x,m.to_y,player)
+			move(grid,m.from_x,m.from_y,m.to_x,m.to_y)
 			//m.printMove
 			if(m.move_type == "capture"){
 				val toEat = grid((m.from_x+m.to_x)/2)((m.from_y+m.to_y)/2)
@@ -201,11 +206,10 @@ class Intelligence{
 	val MAX = "b"
 	val MIN = "w"
 
-
 	/**
 	 * tells if there could be a move of type "capture" from the given position and given direction
 	 */
-	def canEat( grid:Array[Array[Box]], x:Int, y:Int, direction:(Int,Int)=>(Int,Int)) : (Int,Int) = {
+	private def canEat( grid:Array[Array[Box]], x:Int, y:Int, direction:(Int,Int)=>(Int,Int)) : (Int,Int) = {
 		val (new_x,new_y) = direction(x,y)
 		if(new_x < 8 && new_y < 8 && new_y > -1 && new_x > -1 && grid(new_x)(new_y).content == null){
 			// if there's an empty cell after the opponent cell, through the given direction, say yes and return the new position 
@@ -348,7 +352,7 @@ class Intelligence{
 	 * @param inc : function wich increments properly the x coordinate
 	 * @param inc_y : function used to increment the y coordinate when searching for an "capture" move
 	 */
-	private def getPawnMove(grid:Array[Array[Box]], from_x:Int, from_y:Int, x:Int, y:Int, inc:Int => Int,inc_y : Int => Int,opponent:String) : ListBuffer[ListBuffer[Move]] = {
+	private def getPawnMove(grid:Array[Array[Box]], from_x:Int, from_y:Int, x:Int, y:Int, inc:Int => Int,inc_y : Int => Int) : ListBuffer[ListBuffer[Move]] = {
 		/* look at what there is in the near box */
 		if(x < 0 || x > 7 || y < 0 || y > 7) return null
 		grid(x)(y).content match{
@@ -432,10 +436,10 @@ class Intelligence{
 				}
 				// Check only in one direction
 				case p : Pawn => {
-					val res_moves = getPawnMove(grid,b.x,b.y,inc(b.x),b.y+1,inc,(_+2),opponent)
+					val res_moves = getPawnMove(grid,b.x,b.y,inc(b.x),b.y+1,inc,(_+2))
 					// If we have possible moves, add them in moves array
 					if(res_moves!=null && res_moves.length > 0) res_moves.foreach(move => moves += move.toArray)
-					val res_moves2 = getPawnMove(grid,b.x,b.y,inc(b.x),b.y-1,inc,(_-2),opponent)
+					val res_moves2 = getPawnMove(grid,b.x,b.y,inc(b.x),b.y-1,inc,(_-2))
 					// If we have possible moves, add them in moves array
 					if(res_moves2!=null && res_moves2.length > 0) res_moves2.foreach(move => moves += move.toArray)
 				} 
@@ -539,5 +543,11 @@ class Intelligence{
 		}))
 		
 		num_player - num_opponent
-	}		
+	}
+
+	def evaluate2(player:String,grid:Array[Array[Box]]) = {
+		for(i <- 0 until 8)
+			for(j <- 0 until 8)
+				grid(j)(i) ...
+	}			
 }
