@@ -1,3 +1,6 @@
+import scala.util.Random
+import java.util.Calendar
+
 class Pawn(val player:String){
 	
 	override def equals(o : Any) = o match{case p:Pawn => player==p.player}
@@ -57,7 +60,7 @@ class Chessboard{
 	)
 	
 	//Initialization!
-	/*for(i <- 0 until 3)
+	for(i <- 0 until 3)
 		for(box:Box <- grid(i) if(box.color == "dark")){
 			box.content = new Pawn("b")
 		}
@@ -65,19 +68,19 @@ class Chessboard{
 	for(i <- 5 until 8)
 		for(box:Box <- grid(i) if(box.color == "dark")){
 			box.content = new Pawn("w")
-		}*/
+		}
 	 
 	/*grid(0)(0).content = new KingPawn("b")
 	grid(1)(1).content = new Pawn("w")
 	grid(3)(3).content = new Pawn("w")
 	grid(1)(3).content = new KingPawn("w")
-	grid(1)(5).content = new Pawn("w")*/
+	grid(1)(5).content = new Pawn("w")
 	
 	grid(6)(6).content = new Pawn("w")
 	grid(5)(5).content = new Pawn("b")
 	grid(3)(3).content = new Pawn("b")
 	grid(3)(5).content = new Pawn("b")
-	grid(1)(5).content = new Pawn("b")
+	grid(1)(5).content = new Pawn("b")*/
 
 	def printBoard{
 		grid.foreach(row => {row.foreach( box => box printBox) ; println})
@@ -455,6 +458,9 @@ class Intelligence{
 		moves.toArray
 	}
 	
+	var best_moves_database = new ListBuffer[Array[Move]]()
+	var nodes = 0
+
 	/**
 	 * Implements minmax algorithm. It decides the best move supposing the opponent plays in optimal mode. 
 	 * If at the top level there are "capture" moves, they are the one to be considered.
@@ -465,55 +471,107 @@ class Intelligence{
 	 * 
 	 * return : a couple of elemnents, composed by the evaluation of the current state of the chessboard and the move selected
 	 */	
-	def minMax(depth : Int, grid : Array[Array[Box]]) : (Int,Array[Move]) = {
-		return maxMove(depth,grid,Int.MaxValue,Int.MinValue)
+	def minMax(depth : Int, grid : Array[Array[Box]],killerHeuristic : Boolean) : (Int,Array[Move]) = {
+		var res : (Int,Array[Move]) = null
+		if(killerHeuristic){
+			res = maxMove(1,grid,Int.MinValue,Int.MaxValue)
+			for(i <- 2 to depth) {
+				res = maxMove(i,grid,Int.MinValue,Int.MaxValue)
+				println("depth = "+i)
+				best_moves_database.foreach(m => {m.foreach(a => a.printMove);println})
+				println("Nodi visitati = "+nodes)
+				nodes = 0
+			}
+			
+		} else {
+			nodes = 0
+			res = maxMove(depth,grid,Int.MinValue,Int.MaxValue)
+			println("Nodi visitati = "+nodes)
+		}
+		return res
 	}
 	
 	def maxMove(depth : Int, game : Array[Array[Box]], alpha : Int, beta : Int) : (Int,Array[Move]) = {
-		if(depth == 0) return (evaluate(MAX,game),null)
+		if(depth == 0) return (evaluate2(MAX,game),null)
 		
 		val moves = getPossibleMovesFor(game,MAX,MIN)
 		if(moves == null || moves.length == 0) return (evaluate(MAX,game),null)
 		var best_move : (Int,Array[Move]) = null
 		var new_alpha = alpha
+		
+		if(!(best_moves_database isEmpty)) {
+			// TODO : porto in prima posizione la mossa che corrisponde a best_moves_database(0) usare sameElements
+			for(i <- 0 until moves.length) {
+				if(moves(i).sameElements(best_moves_database(0))){
+					val a = moves(0)
+					moves(0) = best_moves_database(0)
+					moves(i) = a
+				}	
+			}
+			best_moves_database = best_moves_database.drop(1)
+		}
+
 		moves.foreach(move => {
+			nodes +=1
 			var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(game(x)(y)))
 			Chessboard.executeMoves(new_grid,move,MAX)
 			// tocca a Min!
-			val min_move = minMove(depth-1,new_grid,alpha,beta)
+			val min_move = minMove(depth-1,new_grid,new_alpha,beta)
 
 			if(best_move == null || best_move._1 < min_move._1){
 				best_move = (min_move._1,move)
-				new_alpha = best_move._1
 			}
-			if(beta > alpha && best_move!=null) return best_move
+
+			if(best_move._1 <= beta) {
+				best_moves_database.prepend(best_move._2)
+				return best_move
+			}
+			new_alpha = max(new_alpha,best_move._1)
+
 		})
+		best_moves_database.prepend(best_move._2)
 		return best_move
 	}
 
 	def minMove(depth : Int,game : Array[Array[Box]], alpha : Int, beta : Int) : (Int,Array[Move]) = {
-		if(depth == 0) {
-			//println("valutazione per player (depth = 0) +"+player+" : "+evaluate(player,grid))
-			return (evaluate(MAX,game),null)
-		}
+		if(depth == 0) return (evaluate2(MAX,game),null)
 		val moves = getPossibleMovesFor(game,MIN,MAX)
 		
 		if(moves == null || moves.length == 0) return (evaluate(MAX,game),null)
 		
 		var best_move : (Int,Array[Move]) = null
 		var new_beta = beta
+		
+		if(!(best_moves_database isEmpty)) {
+			// TODO : porto in prima posizione la mossa che corrisponde a best_moves_database(0) usare sameElements
+			for(i <- 0 until moves.length){
+				if(moves(i).sameElements(best_moves_database(0))){
+					val a = moves(0)
+					moves(0) = best_moves_database(0)
+					moves(i) = a
+				}	
+			}
+			best_moves_database = best_moves_database.drop(1)
+		}
+
 		moves.foreach(move => {
 			// Costruisco una nuova scacchiera applicando la mossa corrente
+			nodes += 1
 			var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(game(x)(y)))
 			Chessboard.executeMoves(new_grid,move,MIN)
 			// tocca a Min!
-			val max_move = maxMove(depth-1,new_grid,alpha,beta)
+			val max_move = maxMove(depth-1,new_grid,alpha,new_beta)
 			if(best_move == null || best_move._1 > max_move._1){
 				best_move = (max_move._1,move)
-				new_beta = best_move._1
 			}
-			if(beta < alpha && best_move!=null) return best_move
+
+			if(best_move._1 <= alpha){
+				best_moves_database.prepend(best_move._2)
+				return best_move
+			}
+			new_beta = max(new_beta,best_move._1)
 		})
+		best_moves_database.prepend(best_move._2)
 		return best_move
 	}
 	
@@ -545,5 +603,51 @@ class Intelligence{
 		num_player - num_opponent
 	}
 
+	def evaluate2(player:String,grid:Array[Array[Box]]) = {
+		var score = 0
+		for(i <- 0 until 8){
+			for(j <- 0 until 8){
+				var c=grid(j)(i)
+				if(c.content!=null)
+					if(c.content.player == player){
+						c.content match{
+							case _:KingPawn => {
+								score+=Intelligence.KINGPAWN
+								if (i==0 || i==7)
+					  				score -= Intelligence.EDGE
+				  				if (j==0 || j==7)
+					  				score -= Intelligence.EDGE
+							}
+							case _:Pawn => {
+								score+=Intelligence.PAWN
+								score+=Intelligence.POS*(7-i)*(7-i)
+							} 
+						}
+					}else{
+						c.content match{
+							case _:KingPawn => {
+								score-=Intelligence.KINGPAWN
+								if (i==0 || i==7)
+					  				score += Intelligence.EDGE
+				  				if (j==0 || j==7)
+					  				score += Intelligence.EDGE
+							}
+							case _:Pawn => {
+								score-=Intelligence.PAWN
+								score-=Intelligence.POS*i*i
+							}
+						}
+					}
+			}
+		}
+		score
+	}
 
+	object Intelligence{
+		val PAWN = 100
+		val KINGPAWN = 200
+		val POS = 1
+		val EDGE = 10
+		val RANDOM_WEIGHT=10
+	}
 }

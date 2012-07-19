@@ -82,6 +82,7 @@ class ChessboardView extends MainFrame {
     
     val depth_box = new ComboBox[Int](List(10,8,6,4,2,1))
     val eval_func = new ComboBox[String](List("dummy"))
+    val heuristics = new ComboBox[String](List("none","killer heuristic"))
 
     depth_box.minimumSize = new Dimension(70,25)
     depth_box.maximumSize = new Dimension(70,25)
@@ -164,7 +165,6 @@ class ChessboardView extends MainFrame {
 				            }
 				            
 				        }else{
-				            //TODO: decommentare!!!!!!!!!!!!
 				            if(box.top == black || box.top == black_king){
 				                println("hai selezionato una pedina nera!!");
 				                return;
@@ -198,18 +198,27 @@ class ChessboardView extends MainFrame {
 		},BorderPanel.Position.North)
     	add(chessboard, BorderPanel.Position.Center)
 		//add(new FlowPanel(){contents += replyButton}, BorderPanel.Position.South)
-		add(new FlowPanel(){
-			contents += new Label("Status : ")
-			contents += status
-			contents += new Separator
-			contents += new Label("Profondità ricerca : ")
-			contents += depth_box 
-			contents += new Label("Funzione di valutazione : ")
-			contents += eval_func
+		add(new GridPanel(2,0) {
+			contents += new FlowPanel(){
+				contents += new Label("Status : ")
+				contents += status
+				contents += new Separator
+				contents += new Label("Profondità ricerca : ")
+				contents += depth_box 
+				
+			}
+			contents += new FlowPanel(){
+				contents += new Label("Funzione di valutazione : ")
+				contents += eval_func
+				contents += new Label("Euristica : ")
+				contents += heuristics
+			}
 		}, BorderPanel.Position.South)
     }
     
     
+    def getHeuristic = heuristics.selection.item
+
     def setNewGameAction(op : Unit => Unit){
 		newgame.listenTo(newgame)
     	newgame.reactions+={

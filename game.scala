@@ -18,7 +18,7 @@ class Game private(val white_must_eat:Boolean){
 	def chessboard = pChessboard
 	def chessboard_= (chessboard:Chessboard) {pChessboard = chessboard}
 	
-	val intelligence = new Intelligence
+	val intelligence = new Intelligence with DummyEvaluate
 	
 
 	var multiple_moves : Array[Array[Move]] = null
@@ -41,7 +41,7 @@ class Game private(val white_must_eat:Boolean){
 	
 
 	def replayActions() {
-		val s = intelligence.minMax(view.getDepth,chessboard.grid)
+		val s = intelligence.minMax(view.getDepth,chessboard.grid,if(view.getHeuristic == "killer heuristic") true else false)
 		print("\n"+s)
 		print("valore minmax per 'b' = "+s._1+" mossa : "); 
 		if(s._2 != null) {
