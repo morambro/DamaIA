@@ -472,22 +472,18 @@ class Intelligence{
 	 * return : a couple of elemnents, composed by the evaluation of the current state of the chessboard and the move selected
 	 */	
 	def minMax(depth : Int, grid : Array[Array[Box]],killerHeuristic : Boolean,eval : String) : (Int,Array[Move]) = {
-		var res : (Int,Array[Move]) = null
+		nodes = 0
 		if(killerHeuristic){
-			res = maxMove(1,grid,Int.MinValue,Int.MaxValue,eval)
-			for(i <- 2 to depth) {
-				res = maxMove(i,grid,Int.MinValue,Int.MaxValue,eval)
+			maxMove(1,grid,Int.MinValue,Int.MaxValue,eval)
+			for(i <- 2 until depth) {
+				maxMove(i,grid,Int.MinValue,Int.MaxValue,eval)
 				println("depth = "+i)
 				best_moves_database.foreach(m => {m.foreach(a => a.printMove);println})
 				println("Nodi visitati = "+nodes)
-				nodes = 0
 			}
-			
-		} else {
-			nodes = 0
-			res = maxMove(depth,grid,Int.MinValue,Int.MaxValue,eval)
-			println("Nodi visitati = "+nodes)
 		}
+		val res = maxMove(depth,grid,Int.MinValue,Int.MaxValue,eval)
+		println("Nodi visitati = "+nodes)
 		return res
 	}
 	
@@ -520,14 +516,14 @@ class Intelligence{
 
 			if(best_move == null || best_move._1 < min_move._1){
 				best_move = (min_move._1,move)
+				new_alpha = max(new_alpha,best_move._1)
 			}
 
-			if(best_move._1 <= beta) {
+			if(best_move._1 >= beta) {
+				// Returns because no better moves could be choose
 				best_moves_database.prepend(best_move._2)
 				return best_move
 			}
-			new_alpha = max(new_alpha,best_move._1)
-
 		})
 		best_moves_database.prepend(best_move._2)
 		return best_move
@@ -563,17 +559,74 @@ class Intelligence{
 			val max_move = maxMove(depth-1,new_grid,alpha,new_beta,eval)
 			if(best_move == null || best_move._1 > max_move._1){
 				best_move = (max_move._1,move)
+				new_beta = min(new_beta,best_move._1)
 			}
-
-			if(best_move._1 <= alpha){
+			if(best_move._1 <= new_alpha){
+				// No moves better then this will be choosen by maxMoves, so is worthless to continue
 				best_moves_database.prepend(best_move._2)
 				return best_move
 			}
-			new_beta = max(new_beta,best_move._1)
 		})
 		best_moves_database.prepend(best_move._2)
 		return best_move
 	}
+
+	/*def minMax(depth : Int, grid : Array[Array[Box]],k:Boolean,s:String) : (Int,Array[Move]) = {
+		return maxMove(depth,grid,Int.MaxValue,Int.MinValue)
+	}
+	
+	def maxMove(depth : Int, game : Array[Array[Box]], alpha : Int, beta : Int) : (Int,Array[Move]) = {
+		if(depth == 0) return (evaluate2(MAX,game),null)
+		
+		val moves = getPossibleMovesFor(game,MAX,MIN)
+		if(moves == null || moves.length == 0) return (evaluate2(MAX,game),null)
+		var best_move : (Int,Array[Move]) = null
+		var new_alpha = alpha
+		moves.foreach(move => {
+			var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(game(x)(y)))
+			Chessboard.executeMoves(new_grid,move,MAX)
+			// tocca a Min!
+			val min_move = minMove(depth-1,new_grid,new_alpha,beta)
+
+			if(best_move == null || best_move._1 < min_move._1){
+				best_move = (min_move._1,move)
+				new_alpha = best_move._1
+			}
+			if(beta > new_alpha && best_move!=null) {
+				return best_move
+			}
+		})
+		return best_move
+	}
+
+	def minMove(depth : Int,game : Array[Array[Box]], alpha : Int, beta : Int) : (Int,Array[Move]) = {
+		if(depth == 0) {
+			//println("valutazione per player (depth = 0) +"+player+" : "+evaluate2(player,grid))
+			return (evaluate2(MAX,game),null)
+		}
+		val moves = getPossibleMovesFor(game,MIN,MAX)
+		
+		if(moves == null || moves.length == 0) return (evaluate2(MAX,game),null)
+		
+		var best_move : (Int,Array[Move]) = null
+		var new_beta = beta
+		moves.foreach(move => {
+			// Costruisco una nuova scacchiera applicando la mossa corrente
+			var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(game(x)(y)))
+			Chessboard.executeMoves(new_grid,move,MIN)
+			// tocca a Min!
+			val max_move = maxMove(depth-1,new_grid,alpha,new_beta)
+			if(best_move == null || best_move._1 > max_move._1){
+				best_move = (max_move._1,move)
+				new_beta = best_move._1
+			}
+			if(new_beta < alpha && best_move!=null) {
+				return best_move
+			}
+		})
+		return best_move
+	}
+	*/
 	
 	
 	
@@ -617,27 +670,36 @@ class Intelligence{
 		for(i <- 0 until 8){
 			for(j <- 0 until 8){
 				var c=grid(j)(i)
-				grid(j)(i).content match {
-					case null =>
-					case p : KingPawn => 
-						if(p.player == player){
-							score+=Intelligence.KINGPAWN
-							if (i==0 || i==7) score -= Intelligence.EDGE
-				  			if (j==0 || j==7) score -= Intelligence.EDGE
-						}else{
-							score-=Intelligence.KINGPAWN
-							if (i==0 || i==7) score += Intelligence.EDGE
-				  			if (j==0 || j==7) score += Intelligence.EDGE
+				if(c.content!=null)
+					if(c.content.player == player){
+						c.content match{
+							case _:KingPawn => {
+								score+=Intelligence.KINGPAWN
+								if (i==0 || i==7)
+					  				score -= Intelligence.EDGE
+				  				if (j==0 || j==7)
+					  				score -= Intelligence.EDGE
+							}
+							case _:Pawn => {
+								score+=Intelligence.PAWN
+								score+=Intelligence.POS*(7-i)*(7-i)
+							} 
 						}
-					case p : Pawn =>
-						if(p.player == player){
-							score+=Intelligence.PAWN
-							score+=Intelligence.POS*(7-i)*(7-i)
-						}else{
-							score-=Intelligence.PAWN
-							score-=Intelligence.POS*i*i
+					}else{
+						c.content match{
+							case _:KingPawn => {
+								score-=Intelligence.KINGPAWN
+								if (i==0 || i==7)
+					  				score += Intelligence.EDGE
+				  				if (j==0 || j==7)
+					  				score += Intelligence.EDGE
+							}
+							case _:Pawn => {
+								score-=Intelligence.PAWN
+								score-=Intelligence.POS*i*i
+							}
 						}
-				} 
+					}
 			}
 		}
 		score
