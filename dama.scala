@@ -493,10 +493,10 @@ class Intelligence{
 	}
 	
 	def maxMove(depth : Int, game : Array[Array[Box]], alpha : Int, beta : Int,eval:String) : (Int,Array[Move]) = {
-		if(depth == 0) return (evaluate(MAX,game,eval),null)
+		if(depth == 0) return (evaluate(MAX,game,eval,MAX),null)
 		
 		val moves = getPossibleMovesFor(game,MAX,MIN)
-		if(moves == null || moves.length == 0) return (evaluate(MAX,game,eval),null)
+		if(moves == null || moves.length == 0) return (evaluate(MAX,game,eval,MAX),null)
 		var best_move : (Int,Array[Move]) = null
 		var new_alpha = alpha
 		
@@ -535,10 +535,10 @@ class Intelligence{
 	}
 
 	def minMove(depth : Int,game : Array[Array[Box]], alpha : Int, beta : Int,eval : String) : (Int,Array[Move]) = {
-		if(depth == 0) return (evaluate(MAX,game,eval),null)
+		if(depth == 0) return (evaluate(MAX,game,eval,MIN),null)
 		val moves = getPossibleMovesFor(game,MIN,MAX)
 		
-		if(moves == null || moves.length == 0) return (evaluate(MAX,game,eval),null)
+		if(moves == null || moves.length == 0) return (evaluate(MAX,game,eval,MIN),null)
 		
 		var best_move : (Int,Array[Move]) = null
 		var new_beta = beta
@@ -635,11 +635,12 @@ class Intelligence{
 	
 	
 	
-	def evaluate(player:String,grid:Array[Array[Box]],eval : String) = {
+	def evaluate(player:String,grid:Array[Array[Box]],eval : String,inGame:String) = {
 		eval match{
 			case "dummy" => evaluate1(player,grid)
 			case "eval2" => evaluate2(player,grid)
 			case "eval3" => evaluate3(player,grid)
+			case "eval4" => evaluate4(player,grid,inGame)
 			case _ => evaluate1(player,grid)
 		}
 	}
@@ -698,7 +699,7 @@ class Intelligence{
 				} 
 			}
 		}
-		score+= (new Random(Calendar.getInstance().getTimeInMillis()).nextInt(1)) * Intelligence.RANDOM_WEIGHT
+		score += (new Random(Calendar.getInstance().getTimeInMillis()).nextInt(Intelligence.RANDOM_WEIGHT))
 		score
 	}
 
@@ -761,14 +762,83 @@ class Intelligence{
 					}
 			}
 		}
+		score += (new Random(Calendar.getInstance().getTimeInMillis()).nextInt(Intelligence.MOVE))
+		score
+	}
+
+	def evaluate4(player:String,grid:Array[Array[Box]],inGame:String) = {
+		var pawnFound = false
+		var kingFound = false
+		var pawnCount = 0
+		var score = 0
+		for (i <- 0 until 8 if(!kingFound)){
+			for (j <- 0 until 8 if(!kingFound)){
+				grid(i)(j).content match {
+						case null =>
+						case p : KingPawn => 
+							pawnCount += 1
+							kingFound = true
+						case p : Pawn => pawnCount += 1
+				}
+			}
+		}
+		if(!kingFound || pawnCount>Intelligence.MAX_PAWN){ 
+			for(i <- 0 until 8){
+				for(j <- 0 until 8){
+					grid(i)(j).content match {
+						case null =>
+						case p : Pawn => 
+							if(p.player == player){
+								if((7-i)<=5) score += Intelligence.PAWN*(8-j)*(8-j)*(7-i)*(7-i)
+								else score += Intelligence.PAWN*j*j*(7-i)*(7-i)
+							} else{
+								if(i<=3) score -= Intelligence.PAWN*(8-j)*(8-j)*i*i
+								else score -= Intelligence.PAWN*j*j*i*i
+							}
+					}
+				}
+			}
+		} else{
+			var row = 0
+			var column = 0
+			var pairCoupleCount = 0
+			for(i <- 0 until 8){
+				for(j <- 0 until 8){
+					grid(i)(j).content match {
+						case null =>
+						case p : KingPawn => 
+							if(p.player == player) score += Intelligence.KINGPAWN
+							else score -= Intelligence.KINGPAWN
+						case p : Pawn =>
+								if(!pawnFound){
+								row = i
+								column = j
+								pawnFound=true
+							} else{
+								pawnFound=false
+								if(scala.math.max(scala.math.abs(row-i),scala.math.abs(column-j))%2 == 0) pairCoupleCount += 1
+							}
+							if(p.player == player) score += Intelligence.PAWN*(7-i)*(7-i)
+							else score -= Intelligence.PAWN*i*i
+					}
+				}
+			}
+			if((pairCoupleCount % 2) == 1){
+				if(inGame == MAX) score += Intelligence.MOVE
+				else score -= Intelligence.MOVE
+			}
+		}
+		score += (new Random(Calendar.getInstance().getTimeInMillis()).nextInt(Intelligence.RANDOM_WEIGHT))
 		score
 	}
 
 	object Intelligence{
 		val PAWN = 100
 		val KINGPAWN = 200
+		val MOVE=20
 		val POS = 1
 		val EDGE = 10
 		val RANDOM_WEIGHT=10
+		val MAX_PAWN=18
 	}
 }
