@@ -41,10 +41,11 @@ class Game private(val white_must_eat:Boolean){
 	
 
 	def replayActions() {
-		val s = intelligence.minMax(view.getDepth,chessboard.grid,if(view.getHeuristic == "killer heuristic") true else false)
-		print("\n"+s)
-		print("valore minmax per 'b' = "+s._1+" mossa : "); 
+		val heur = if(view.getHeuristic == "killer heuristic") true else false
+		val s = intelligence.minMax(view.getDepth,chessboard.grid,heur,view.getEval)
 		if(s._2 != null) {
+			println("\nvalore minmax per 'b' = "+s._1+" mossa : ")
+			s._2.foreach(m => m.printMove)
 			Chessboard.executeMoves(chessboard.grid,s._2,"b")
 			view.updateChessboard(chessboard)
 			chessboard.printBoard

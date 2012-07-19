@@ -81,7 +81,7 @@ class ChessboardView extends MainFrame {
     val replyButton = new Button("Reply")
     
     val depth_box = new ComboBox[Int](List(10,8,6,4,2,1))
-    val eval_func = new ComboBox[String](List("dummy"))
+    val eval_func = new ComboBox[String](List("dummy","eval1"))
     val heuristics = new ComboBox[String](List("none","killer heuristic"))
 
     depth_box.minimumSize = new Dimension(70,25)
@@ -218,6 +218,7 @@ class ChessboardView extends MainFrame {
     
     
     def getHeuristic = heuristics.selection.item
+    def getEval = eval_func.selection.item
 
     def setNewGameAction(op : Unit => Unit){
 		newgame.listenTo(newgame)

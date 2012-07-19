@@ -471,12 +471,12 @@ class Intelligence{
 	 * 
 	 * return : a couple of elemnents, composed by the evaluation of the current state of the chessboard and the move selected
 	 */	
-	def minMax(depth : Int, grid : Array[Array[Box]],killerHeuristic : Boolean) : (Int,Array[Move]) = {
+	def minMax(depth : Int, grid : Array[Array[Box]],killerHeuristic : Boolean,eval : String) : (Int,Array[Move]) = {
 		var res : (Int,Array[Move]) = null
 		if(killerHeuristic){
-			res = maxMove(1,grid,Int.MinValue,Int.MaxValue)
+			res = maxMove(1,grid,Int.MinValue,Int.MaxValue,eval)
 			for(i <- 2 to depth) {
-				res = maxMove(i,grid,Int.MinValue,Int.MaxValue)
+				res = maxMove(i,grid,Int.MinValue,Int.MaxValue,eval)
 				println("depth = "+i)
 				best_moves_database.foreach(m => {m.foreach(a => a.printMove);println})
 				println("Nodi visitati = "+nodes)
@@ -485,17 +485,17 @@ class Intelligence{
 			
 		} else {
 			nodes = 0
-			res = maxMove(depth,grid,Int.MinValue,Int.MaxValue)
+			res = maxMove(depth,grid,Int.MinValue,Int.MaxValue,eval)
 			println("Nodi visitati = "+nodes)
 		}
 		return res
 	}
 	
-	def maxMove(depth : Int, game : Array[Array[Box]], alpha : Int, beta : Int) : (Int,Array[Move]) = {
-		if(depth == 0) return (evaluate2(MAX,game),null)
+	def maxMove(depth : Int, game : Array[Array[Box]], alpha : Int, beta : Int,eval:String) : (Int,Array[Move]) = {
+		if(depth == 0) return (evaluate(MAX,game,eval),null)
 		
 		val moves = getPossibleMovesFor(game,MAX,MIN)
-		if(moves == null || moves.length == 0) return (evaluate(MAX,game),null)
+		if(moves == null || moves.length == 0) return (evaluate(MAX,game,eval),null)
 		var best_move : (Int,Array[Move]) = null
 		var new_alpha = alpha
 		
@@ -516,7 +516,7 @@ class Intelligence{
 			var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(game(x)(y)))
 			Chessboard.executeMoves(new_grid,move,MAX)
 			// tocca a Min!
-			val min_move = minMove(depth-1,new_grid,new_alpha,beta)
+			val min_move = minMove(depth-1,new_grid,new_alpha,beta,eval)
 
 			if(best_move == null || best_move._1 < min_move._1){
 				best_move = (min_move._1,move)
@@ -533,11 +533,11 @@ class Intelligence{
 		return best_move
 	}
 
-	def minMove(depth : Int,game : Array[Array[Box]], alpha : Int, beta : Int) : (Int,Array[Move]) = {
-		if(depth == 0) return (evaluate2(MAX,game),null)
+	def minMove(depth : Int,game : Array[Array[Box]], alpha : Int, beta : Int,eval : String) : (Int,Array[Move]) = {
+		if(depth == 0) return (evaluate(MAX,game,eval),null)
 		val moves = getPossibleMovesFor(game,MIN,MAX)
 		
-		if(moves == null || moves.length == 0) return (evaluate(MAX,game),null)
+		if(moves == null || moves.length == 0) return (evaluate(MAX,game,eval),null)
 		
 		var best_move : (Int,Array[Move]) = null
 		var new_beta = beta
@@ -560,7 +560,7 @@ class Intelligence{
 			var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(game(x)(y)))
 			Chessboard.executeMoves(new_grid,move,MIN)
 			// tocca a Min!
-			val max_move = maxMove(depth-1,new_grid,alpha,new_beta)
+			val max_move = maxMove(depth-1,new_grid,alpha,new_beta,eval)
 			if(best_move == null || best_move._1 > max_move._1){
 				best_move = (max_move._1,move)
 			}
@@ -576,13 +576,22 @@ class Intelligence{
 	}
 	
 	
+	
+	def evaluate(player:String,grid:Array[Array[Box]],eval : String) = {
+		eval match{
+			case "dummy" => evaluate1(player,grid)
+			case "eval2" => evaluate2(player,grid)
+			case _ => evaluate1(player,grid)
+		}
+	}
+
 	/**
 	 * Very primitive heuristic function. Evaluates the goodness of the situation by giving the difference between the number of 
 	 * pieces of the white player and the number of pieces of the opponent
 	 * @param player : player respect who calculate the evaluation function
 	 * @param grid : current chessboard situation 
 	 */
-	def evaluate(player:String,grid:Array[Array[Box]]) = {
+	def evaluate1(player:String,grid:Array[Array[Box]]) = {
 		var num_player = 0
 		var num_opponent = 0
 		grid.foreach(row => row.foreach(c => {
@@ -602,7 +611,6 @@ class Intelligence{
 		
 		num_player - num_opponent
 	}
-
 	def evaluate2(player:String,grid:Array[Array[Box]]) = {
 		var score = 0
 		for(i <- 0 until 8){
