@@ -181,6 +181,11 @@ object Chessboard{
 		}
 		false
 	}
+
+
+	def isMoveLegal(y:Int, x:Int):Boolean = {
+		(x > -1 && x < 8 && y > -1 && y < 8)
+	}
 }
 
 /**
@@ -581,6 +586,7 @@ class Intelligence{
 		eval match{
 			case "dummy" => evaluate1(player,grid)
 			case "eval2" => evaluate2(player,grid)
+			case "eval3" => evaluate3(player,grid)
 			case _ => evaluate1(player,grid)
 		}
 	}
@@ -616,8 +622,7 @@ class Intelligence{
 		var score = 0
 		for(i <- 0 until 8){
 			for(j <- 0 until 8){
-				var c=grid(j)(i)
-				grid(j)(i).content match {
+				grid(i)(j).content match {
 					case null =>
 					case p : KingPawn => 
 						if(p.player == player){
@@ -636,6 +641,69 @@ class Intelligence{
 						}else{
 							score-=Intelligence.PAWN
 							score-=Intelligence.POS*i*i
+						}
+				} 
+			}
+		}
+		score+= (new Random(Calendar.getInstance().getTimeInMillis()).nextInt(1)) * Intelligence.RANDOM_WEIGHT
+		score
+	}
+
+	def maxSupport(player:String,grid:Array[Array[Box]],y:Int, x:Int):Int = {
+		var score = 0
+		var iR = 0
+		if(!Chessboard.isMoveLegal(x,y) || ((Chessboard.isMoveLegal(y+1,x-1) && grid(y+1)(x-1).content != null && grid(y+1)(x-1).content.player != player) && (Chessboard.isMoveLegal(y+1,x+1) && grid(y+1)(x+1).content != null && grid(y+1)(x+1).content.player != player)))
+			if(y == 8) 0
+			else -1
+		else{
+			iR = maxSupport(player, grid, y+1, x-1)
+				if(iR != -1) score+=iR+2;
+			iR=maxSupport(player, grid, y+1, x+1);
+				if(iR != -1) score+=iR+2;
+		}
+		score
+	}
+
+	def minSupport(player:String,grid:Array[Array[Box]],y:Int, x:Int):Int = {
+		var score = 0
+		var iR = 0
+		if(!Chessboard.isMoveLegal(y,x) || ((Chessboard.isMoveLegal(y-1,x-1) && grid(y-1)(x-1).content != null && grid(y-1)(x-1).content.player == player) && (Chessboard.isMoveLegal(y-1,x+1) && grid(y-1)(x+1).content != null && grid(y-1)(x+1).content.player == player)))
+			if(y == -1) 0
+			else -1
+		else{
+			iR = minSupport(player, grid, y-1, x-1)
+				if(iR != -1) score += iR+2;
+			iR=minSupport(player, grid, y-1, x+1);
+				if(iR != -1) score += iR+2;
+		}
+		score
+	}
+
+	def evaluate3(player:String,grid:Array[Array[Box]]) = {
+		var score = 0
+		for(i <- 0 until 8){
+			for(j <- 0 until 8){
+				grid(i)(j).content match {
+					case null =>
+					case p : KingPawn => 
+						if(p.player == player){
+							score+=Intelligence.KINGPAWN
+							if (i==0 || i==7) score -= Intelligence.EDGE
+				  			if (j==0 || j==7) score -= Intelligence.EDGE
+						}else{
+							score-=Intelligence.KINGPAWN
+							if (i==0 || i==7) score += Intelligence.EDGE
+				  			if (j==0 || j==7) score += Intelligence.EDGE
+						}
+					case p : Pawn =>
+						if(p.player == player){
+							score+=Intelligence.PAWN
+							score+=Intelligence.POS*(7-i)*(7-i)
+							score+=maxSupport(player,grid,i,j)
+						}else{
+							score-=Intelligence.PAWN
+							score-=Intelligence.POS*i*i
+							score-=minSupport(player,grid,i,j)
 						}
 				} 
 			}
