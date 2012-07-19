@@ -691,10 +691,10 @@ class Intelligence{
 					case p : Pawn =>
 						if(p.player == player){
 							score+=Intelligence.PAWN
-							score+=Intelligence.POS*(7-i)*(7-i)
+							score+=Intelligence.POS*i*i
 						}else{
 							score-=Intelligence.PAWN
-							score-=Intelligence.POS*i*i
+							score-=Intelligence.POS*(7-i)*(7-i)
 						}
 				} 
 			}
@@ -752,11 +752,11 @@ class Intelligence{
 					case p : Pawn =>
 						if(p.player == player){
 							score+=Intelligence.PAWN
-							score+=Intelligence.POS*(7-i)*(7-i)
+							score+=Intelligence.POS*i*i
 							score+=maxSupport(player,grid,i,j)
 						}else{
 							score-=Intelligence.PAWN
-							score-=Intelligence.POS*i*i
+							score-=Intelligence.POS*(7-i)*(7-i)
 							score-=minSupport(player,grid,i,j)
 						}
 					}
@@ -789,11 +789,11 @@ class Intelligence{
 						case null =>
 						case p : Pawn => 
 							if(p.player == player){
-								if((7-i)<=5) score += Intelligence.PAWN*(8-j)*(8-j)*(7-i)*(7-i)
-								else score += Intelligence.PAWN*j*j*(7-i)*(7-i)
+								if(i<=3) score += Intelligence.PAWN*(8-j)*(8-j)*i*i
+								else score += Intelligence.PAWN*j*j*i*i
 							} else{
-								if(i<=3) score -= Intelligence.PAWN*(8-j)*(8-j)*i*i
-								else score -= Intelligence.PAWN*j*j*i*i
+								if((7-i)<=5) score -= Intelligence.PAWN*(8-j)*(8-j)*(7-i)*(7-i)
+								else score -= Intelligence.PAWN*j*j*(7-i)*(7-i)
 							}
 					}
 				}
@@ -818,8 +818,8 @@ class Intelligence{
 								pawnFound=false
 								if(scala.math.max(scala.math.abs(row-i),scala.math.abs(column-j))%2 == 0) pairCoupleCount += 1
 							}
-							if(p.player == player) score += Intelligence.PAWN*(7-i)*(7-i)
-							else score -= Intelligence.PAWN*i*i
+							if(p.player == player) score += Intelligence.PAWN*i*i
+							else score -= Intelligence.PAWN*(7-i)*(7-i)
 					}
 				}
 			}
