@@ -18,7 +18,7 @@ class Game private(val white_must_eat:Boolean){
 	def chessboard = pChessboard
 	def chessboard_= (chessboard:Chessboard) {pChessboard = chessboard}
 	
-	val intelligence = new Intelligence with DummyEvaluate
+	val intelligence = new Intelligence
 	
 
 	var multiple_moves : Array[Array[Move]] = null
