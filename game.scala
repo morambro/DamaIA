@@ -123,7 +123,7 @@ class Game private(val white_must_eat:Boolean){
 				// delegate to an actor opponent's reply
 				view.showLoadingPopUp
 				actor {
-					reactWithin(300){
+					reactWithin(50){
 						case TIMEOUT => replayActions;view.hideLoadingPopUp;view.setStatus("w","White moves")
 					}
 				}
