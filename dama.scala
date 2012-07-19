@@ -703,31 +703,31 @@ class Intelligence{
 		score
 	}
 
-	def maxSupport(player:String,grid:Array[Array[Box]],y:Int, x:Int):Int = {
+	def minSupport(player:String,grid:Array[Array[Box]],y:Int, x:Int):Int = {
 		var score = 0
 		var iR = 0
 		if(!Chessboard.isMoveLegal(x,y) || ((Chessboard.isMoveLegal(y+1,x-1) && grid(y+1)(x-1).content != null && grid(y+1)(x-1).content.player != player) && (Chessboard.isMoveLegal(y+1,x+1) && grid(y+1)(x+1).content != null && grid(y+1)(x+1).content.player != player)))
 			if(y == 8) 0
 			else -1
 		else{
-			iR = maxSupport(player, grid, y+1, x-1)
+			iR = minSupport(player, grid, y+1, x-1)
 				if(iR != -1) score+=iR+2;
-			iR=maxSupport(player, grid, y+1, x+1);
+			iR = minSupport(player, grid, y+1, x+1);
 				if(iR != -1) score+=iR+2;
 		}
 		score
 	}
 
-	def minSupport(player:String,grid:Array[Array[Box]],y:Int, x:Int):Int = {
+	def maxSupport(player:String,grid:Array[Array[Box]],y:Int, x:Int):Int = {
 		var score = 0
 		var iR = 0
 		if(!Chessboard.isMoveLegal(y,x) || ((Chessboard.isMoveLegal(y-1,x-1) && grid(y-1)(x-1).content != null && grid(y-1)(x-1).content.player == player) && (Chessboard.isMoveLegal(y-1,x+1) && grid(y-1)(x+1).content != null && grid(y-1)(x+1).content.player == player)))
 			if(y == -1) 0
 			else -1
 		else{
-			iR = minSupport(player, grid, y-1, x-1)
+			iR = maxSupport(player, grid, y-1, x-1)
 				if(iR != -1) score += iR+2;
-			iR=minSupport(player, grid, y-1, x+1);
+			iR = maxSupport(player, grid, y-1, x+1);
 				if(iR != -1) score += iR+2;
 		}
 		score
