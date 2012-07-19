@@ -608,36 +608,27 @@ class Intelligence{
 		for(i <- 0 until 8){
 			for(j <- 0 until 8){
 				var c=grid(j)(i)
-				if(c.content!=null)
-					if(c.content.player == player){
-						c.content match{
-							case _:KingPawn => {
-								score+=Intelligence.KINGPAWN
-								if (i==0 || i==7)
-					  				score -= Intelligence.EDGE
-				  				if (j==0 || j==7)
-					  				score -= Intelligence.EDGE
-							}
-							case _:Pawn => {
-								score+=Intelligence.PAWN
-								score+=Intelligence.POS*(7-i)*(7-i)
-							} 
+				grid(j)(i).content match {
+					case null =>
+					case p : KingPawn => 
+						if(p.player == player){
+							score+=Intelligence.KINGPAWN
+							if (i==0 || i==7) score -= Intelligence.EDGE
+				  			if (j==0 || j==7) score -= Intelligence.EDGE
+						}else{
+							score-=Intelligence.KINGPAWN
+							if (i==0 || i==7) score += Intelligence.EDGE
+				  			if (j==0 || j==7) score += Intelligence.EDGE
 						}
-					}else{
-						c.content match{
-							case _:KingPawn => {
-								score-=Intelligence.KINGPAWN
-								if (i==0 || i==7)
-					  				score += Intelligence.EDGE
-				  				if (j==0 || j==7)
-					  				score += Intelligence.EDGE
-							}
-							case _:Pawn => {
-								score-=Intelligence.PAWN
-								score-=Intelligence.POS*i*i
-							}
+					case p : Pawn =>
+						if(p.player == player){
+							score+=Intelligence.PAWN
+							score+=Intelligence.POS*(7-i)*(7-i)
+						}else{
+							score-=Intelligence.PAWN
+							score-=Intelligence.POS*i*i
 						}
-					}
+				} 
 			}
 		}
 		score
