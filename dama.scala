@@ -611,6 +611,7 @@ class Intelligence{
 		
 		num_player - num_opponent
 	}
+
 	def evaluate2(player:String,grid:Array[Array[Box]]) = {
 		var score = 0
 		for(i <- 0 until 8){
