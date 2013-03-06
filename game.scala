@@ -1,6 +1,7 @@
 import scala.actors._
 import scala.actors.Actor._
 import scala.collection.mutable.ListBuffer
+
 /**
  * Logic class which coordinates the different parts of the game. It offers also methods callable by the View.
  *
