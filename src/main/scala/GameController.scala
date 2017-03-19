@@ -3,7 +3,7 @@ import scala.actors.Actor._
 import scala.collection.mutable.ListBuffer
 import java.util._;
 import java.text.MessageFormat;
-
+import Player._
 /**
   * Logic class which coordinates the different parts of the game. It offers also methods callable by the View.
   *
@@ -58,7 +58,7 @@ class Game private (val white_must_capture: Boolean) {
         println(formatter.format(stuff))
       }
       s._2.foreach(m => m.printMove)
-      Board.executeMoves(board.grid, s._2, "b")
+      Board.executeMoves(board.grid, s._2, Black)
       view.updateBoard(board)
       board.printBoard
     } else {
@@ -67,7 +67,7 @@ class Game private (val white_must_capture: Boolean) {
     }
 
     // If white doesn't have other legal moves, communicates that black wins!
-    if (engine.getLegalMovesFor(board.grid, "w", "b").length == 0)
+    if (engine.getLegalMovesFor(board.grid, White, Black).length == 0)
       view.showPopUpMessage(messages.getString("gameOverBlackWins"));
   }
 
@@ -76,13 +76,13 @@ class Game private (val white_must_capture: Boolean) {
 	 */
   def updateBoard(x: Int, y: Int, to_x: Int, to_y: Int): Boolean = {
     val move    = new Move(x, y, to_x, to_y, "move")
-    val isValid = Board.isMoveValid(board.grid, move, "w", "b")
+    val isValid = Board.isMoveValid(board.grid, move, White, Black)
     // Force user to choose a "capture" move
 
     if (isValid) {
 
       if (white_must_capture && move.move_type != "capture") {
-        val moves = engine.getLegalMovesFor(board.grid, "w", "b")
+        val moves = engine.getLegalMovesFor(board.grid, White, Black)
         // If the first element of the first move array is a captur move...
         if (moves.length > 0 && moves(0) != null && moves(0).length > 0 && moves(0)(0).move_type == "capture") {
           println(messages.getString("illegalMove") + " " + messages.getString("captureIsMandatory"));
@@ -92,7 +92,7 @@ class Game private (val white_must_capture: Boolean) {
       }
       // Force user to choose longest "capture" move
       if (white_must_capture && move.move_type == "capture") {
-        val moves = engine.getLegalMovesFor(board.grid, "w", "b")
+        val moves = engine.getLegalMovesFor(board.grid, White, Black)
 
         if (moves.length > 0) {
           // curr contains all (multiple) moves which first move is 'move'.
@@ -126,17 +126,17 @@ class Game private (val white_must_capture: Boolean) {
         }
       }
 
-      Board.executeMoves(board.grid, Array(move), "w")
+      Board.executeMoves(board.grid, Array(move), White)
       view.updateBoard(board)
       if (finished) {
-        view.setStatus("b", messages.getString("blackMoves"))
+        view.setStatus(Black.toString, messages.getString("blackMoves"))
         multiple_moves = null
         // delegate to an actor opponent's reply
         view.showLoadingPopUp
         actor {
           reactWithin(50) {
             case TIMEOUT =>
-              replayActions; view.hideLoadingPopUp; view.setStatus("w", messages.getString("whiteMoves"))
+              replayActions; view.hideLoadingPopUp; view.setStatus(White.toString, messages.getString("whiteMoves"))
           }
         }
       } else {

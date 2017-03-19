@@ -1,13 +1,21 @@
 import scala.math._
 
-class Pawn(val player: String) {
+object Player extends Enumeration {
+  type Player= Value
+  val White = Value("w")
+  val Black = Value("b") 
+}
+
+import Player._
+
+class Pawn(val player: Player) {
 
   override def equals(o: Any) = o match { case p: Pawn => player == p.player }
 
   def this(p: Pawn) { this(p.player) }
 }
 
-class KingPawn(player: String) extends Pawn(player)
+class KingPawn(player: Player) extends Pawn(player)
 
 /**
   * logic square of the chessboard
@@ -56,12 +64,12 @@ class Board {
   //Initialization!
   for (i <- 0 until 3)
     for (square: Square <- grid(i) if (square.color == "dark")) {
-      square.content = new Pawn("b")
+      square.content = new Pawn(Black)
     }
 
   for (i <- 5 until 8)
     for (square: Square <- grid(i) if (square.color == "dark")) {
-      square.content = new Pawn("w")
+      square.content = new Pawn(White)
     }
 
   /*grid(0)(0).content = new KingPawn("b")
@@ -95,7 +103,7 @@ object Board {
     false
   }
 
-  def executeMoves(grid: Array[Array[Square]], moves: Array[Move], player: String) {
+  def executeMoves(grid: Array[Array[Square]], moves: Array[Move], player: Player) {
     moves.foreach(m => {
       move(grid, m.from_x, m.from_y, m.to_x, m.to_y)
       //m.printMove
@@ -105,8 +113,8 @@ object Board {
         toCapture.content = null
       }
       // If the pawn reaches the first row, becomes a King
-      if (m.to_x == 0 && player == "w") grid(m.to_x)(m.to_y).content = new KingPawn("w")
-      if (m.to_x == 7 && player == "b") grid(m.to_x)(m.to_y).content = new KingPawn("b")
+      if (m.to_x == 0 && player == White) grid(m.to_x)(m.to_y).content = new KingPawn(White)
+      if (m.to_x == 7 && player == Black) grid(m.to_x)(m.to_y).content = new KingPawn(Black)
     })
   }
 
@@ -116,8 +124,8 @@ object Board {
   implicit def chessboardToStringMatrix(c: Board) = {
     Array.tabulate(8, 8)((x, y) =>
       c.grid(x)(y).content match {
-        case p: KingPawn => p.player.concat(p.player)
-        case p: Pawn     => p.player
+        case p: KingPawn => p.player.toString.concat(p.player.toString)
+        case p: Pawn     => p.player.toString
         case _           => "_"
     })
     //if(c.grid(x)(y).content != null) c.grid(x)(y).content.player else "_")
@@ -126,7 +134,7 @@ object Board {
   /**
 	 * Tells if a given move is a valid move for white player
 	 */
-  def isMoveValid(grid: Array[Array[Square]], m: Move, player: String, opponent: String): Boolean = {
+  def isMoveValid(grid: Array[Array[Square]], m: Move, player: Player, opponent: Player): Boolean = {
 
     grid(m.from_x)(m.from_y).content match {
       // Case of white king pawn

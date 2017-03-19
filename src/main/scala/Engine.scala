@@ -2,14 +2,15 @@ import scala.collection.mutable.ListBuffer
 import scala.util.Random
 import java.util.Calendar
 import scala.math._
+import Player._
 
 /**
   * Class which represents the intelligent engine of the game
   */
 class Engine {
 
-  val MAX = "b"
-  val MIN = "w"
+  val MAX = Black
+  val MIN = White
 
   /**
 	 * tells if there could be a move of type "capture" from the given position and given direction
@@ -243,7 +244,7 @@ class Engine {
                               y: Int,
                               inc: Int => Int,
                               inc_y: Int => Int,
-                              opponent: String): ListBuffer[ListBuffer[Move]] = {
+                              opponent: Player): ListBuffer[ListBuffer[Move]] = {
     /* look at what there is in the near square */
     if (x < 0 || x > 7 || y < 0 || y > 7) return null
     grid(x)(y).content match {
@@ -278,8 +279,8 @@ class Engine {
 	 * return all legal moves from the given configuration
 	 */
   def getLegalMovesFor(grid: Array[Array[Square]],
-                          player: String,
-                          opponent: String): Array[Array[Move]] = {
+                          player: Player,
+                          opponent: Player): Array[Array[Move]] = {
     var moves = ListBuffer[Array[Move]]()
     val inc   = if (player == MAX) (x: Int) => x + 1 else (x: Int) => x - 1
     val dec   = if (player == MAX) (x: Int) => x - 1 else (x: Int) => x + 1
@@ -513,7 +514,7 @@ class Engine {
 	}
 	*/
 
-  def evaluate(player: String, grid: Array[Array[Square]], eval: String, inGame: String) = {
+  def evaluate(player: Player, grid: Array[Array[Square]], eval: String, inGame: Player) = {
     eval match {
       case "dummy" => evaluate1(player, grid)
       case "eval2" => evaluate2(player, grid)
@@ -529,7 +530,7 @@ class Engine {
 	 * @param player : player respect who calculate the evaluation function
 	 * @param grid : current chessboard situation
 	 */
-  def evaluate1(player: String, grid: Array[Array[Square]]) = {
+  def evaluate1(player: Player, grid: Array[Array[Square]]) = {
     var num_player   = 0
     var num_opponent = 0
     grid.foreach(row =>
@@ -550,7 +551,7 @@ class Engine {
     num_player - num_opponent
   }
 
-  def evaluate2(player: String, grid: Array[Array[Square]]) = {
+  def evaluate2(player: Player, grid: Array[Array[Square]]) = {
     var score = 0
     for (i <- 0 until 8) {
       for (j <- 0 until 8) {
@@ -582,7 +583,7 @@ class Engine {
     score
   }
 
-  def minSupport(player: String, grid: Array[Array[Square]], y: Int, x: Int): Int = {
+  def minSupport(player: Player, grid: Array[Array[Square]], y: Int, x: Int): Int = {
     var score = 0
     var iR    = 0
     if (!Board.isMoveLegal(x, y) || ((Board.isMoveLegal(y + 1, x - 1) && grid(y + 1)(
@@ -600,7 +601,7 @@ class Engine {
     score
   }
 
-  def maxSupport(player: String, grid: Array[Array[Square]], y: Int, x: Int): Int = {
+  def maxSupport(player: Player, grid: Array[Array[Square]], y: Int, x: Int): Int = {
     var score = 0
     var iR    = 0
     if (!Board.isMoveLegal(y, x) || ((Board.isMoveLegal(y - 1, x - 1) && grid(y - 1)(
@@ -618,7 +619,7 @@ class Engine {
     score
   }
 
-  def evaluate3(player: String, grid: Array[Array[Square]]) = {
+  def evaluate3(player: Player, grid: Array[Array[Square]]) = {
     var score = 0
     for (i <- 0 until 8) {
       for (j <- 0 until 8) {
@@ -651,7 +652,7 @@ class Engine {
     score
   }
 
-  def evaluate4(player: String, grid: Array[Array[Square]], inGame: String) = {
+  def evaluate4(player: Player, grid: Array[Array[Square]], inGame: Player) = {
     var pawnFound = false
     var kingFound = false
     var pawnCount = 0
