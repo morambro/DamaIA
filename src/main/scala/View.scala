@@ -118,14 +118,6 @@ class ChessboardView extends MainFrame {
 
   var boxes = Array.ofDim[ChessBox](8, 8)
 
-  try {
-    javax.swing.UIManager.getInstalledLookAndFeels.foreach(info => {
-      if ("Nimbus" == info.getName) javax.swing.UIManager.setLookAndFeel(info.getClassName)
-    })
-  } catch {
-    case ex: Exception => ex.printStackTrace
-  }
-
   // creazione della scacchiera
   for (i <- 0 until 8) {
     for (j <- 0 until 8) {
