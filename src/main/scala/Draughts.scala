@@ -11,9 +11,9 @@ class Pawn(val player: String) {
 class KingPawn(player: String) extends Pawn(player)
 
 /**
-  * logic box of the chessboard
+  * logic square of the chessboard
   */
-class Box(val x: Int, val y: Int) {
+class Square(val x: Int, val y: Int) {
 
   var pColor         = "light"
   var pContent: Pawn = null
@@ -24,7 +24,7 @@ class Box(val x: Int, val y: Int) {
   def content = pContent
   def content_=(c: Pawn) { pContent = c }
 
-  def printBox {
+  def printSquare {
     if (content != null)
       content match {
         case p: KingPawn => print(" " + content.player + content.player + " ")
@@ -32,7 +32,7 @@ class Box(val x: Int, val y: Int) {
       } else print("   ")
   }
 
-  def this(b: Box) {
+  def this(b: Square) {
     this(b.x, b.y)
     pColor = b.color
     pContent = b.content
@@ -44,7 +44,7 @@ import scala.math._
 class Chessboard {
 
   /* ------------------------ Initializations --------------------------------*/
-  var grid = Array.tabulate(8, 8)(new Box(_, _))
+  var grid = Array.tabulate(8, 8)(new Square(_, _))
 
   var odd = true
   grid.foreach(row => {
@@ -58,13 +58,13 @@ class Chessboard {
 
   //Initialization!
   for (i <- 0 until 3)
-    for (box: Box <- grid(i) if (box.color == "dark")) {
-      box.content = new Pawn("b")
+    for (square: Square <- grid(i) if (square.color == "dark")) {
+      square.content = new Pawn("b")
     }
 
   for (i <- 5 until 8)
-    for (box: Box <- grid(i) if (box.color == "dark")) {
-      box.content = new Pawn("w")
+    for (square: Square <- grid(i) if (square.color == "dark")) {
+      square.content = new Pawn("w")
     }
 
   /*grid(0)(0).content = new KingPawn("b")
@@ -80,7 +80,7 @@ class Chessboard {
 	grid(1)(5).content = new Pawn("b")*/
 
   def printBoard {
-    grid.foreach(row => { row.foreach(box => box printBox); println })
+    grid.foreach(row => { row.foreach(square => square printSquare); println })
   }
 }
 
@@ -89,7 +89,7 @@ class Chessboard {
   */
 object Chessboard {
 
-  def move(grid: Array[Array[Box]], form_x: Int, from_y: Int, to_x: Int, to_y: Int): Boolean = {
+  def move(grid: Array[Array[Square]], form_x: Int, from_y: Int, to_x: Int, to_y: Int): Boolean = {
     if (grid(form_x)(from_y).content != null) {
       grid(to_x)(to_y).content = grid(form_x)(from_y).content
       grid(form_x)(from_y).content = null
@@ -98,7 +98,7 @@ object Chessboard {
     false
   }
 
-  def executeMoves(grid: Array[Array[Box]], moves: Array[Move], player: String) {
+  def executeMoves(grid: Array[Array[Square]], moves: Array[Move], player: String) {
     moves.foreach(m => {
       move(grid, m.from_x, m.from_y, m.to_x, m.to_y)
       //m.printMove
@@ -129,7 +129,7 @@ object Chessboard {
   /**
 	 * Tells if a given move is a valid move for white player
 	 */
-  def isMoveValid(grid: Array[Array[Box]], m: Move, player: String, opponent: String): Boolean = {
+  def isMoveValid(grid: Array[Array[Square]], m: Move, player: String, opponent: String): Boolean = {
 
     grid(m.from_x)(m.from_y).content match {
       // Case of white king pawn
@@ -214,7 +214,7 @@ class Intelligence {
   /**
 	 * tells if there could be a move of type "capture" from the given position and given direction
 	 */
-  private def canCapture(grid: Array[Array[Box]],
+  private def canCapture(grid: Array[Array[Square]],
                      x: Int,
                      y: Int,
                      direction: (Int, Int) => (Int, Int)): (Int, Int) = {
@@ -249,7 +249,7 @@ class Intelligence {
 	 * @param current_move : Move list to wich append new moves
 	 * @param total_moves : list of lists of moves containing all moves found (initially empty)
 	 */
-  def checkForMultipleCapture(grid: Array[Array[Box]],
+  def checkForMultipleCapture(grid: Array[Array[Square]],
                               f_x: Int,
                               f_y: Int,
                               inc: Int => Int,
@@ -266,7 +266,7 @@ class Intelligence {
         // If i found a possible capture "on the left" add the new move to current_move
         if (res_left != null) {
           current_move += new Move(f_x, f_y, res_left._1, res_left._2, "capture")
-          var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Box(grid(x)(y)))
+          var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(grid(x)(y)))
           Chessboard.executeMoves(new_grid, current_move.toArray, MAX)
           // recoursive call
           checkForMultipleCapture(new_grid,
@@ -289,7 +289,7 @@ class Intelligence {
           }
 
           mult_moves_right += new Move(f_x, f_y, res_right._1, res_right._2, "capture")
-          var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Box(grid(x)(y)))
+          var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(grid(x)(y)))
           Chessboard.executeMoves(new_grid, mult_moves_right.toArray, MAX)
           // recoursive call
           checkForMultipleCapture(new_grid,
@@ -311,7 +311,7 @@ class Intelligence {
           } else mult_moves_right = current_move
 
           mult_moves_right += new Move(f_x, f_y, res_up_left._1, res_up_left._2, "capture")
-          var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Box(grid(x)(y)))
+          var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(grid(x)(y)))
           Chessboard.executeMoves(new_grid, mult_moves_right.toArray, MAX)
           // recoursive call
           checkForMultipleCapture(new_grid,
@@ -332,7 +332,7 @@ class Intelligence {
           } else mult_moves_right = current_move
 
           mult_moves_right += new Move(f_x, f_y, res_up_right._1, res_up_right._2, "capture")
-          var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Box(grid(x)(y)))
+          var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(grid(x)(y)))
           Chessboard.executeMoves(new_grid, mult_moves_right.toArray, MAX)
           // recoursive call
           checkForMultipleCapture(new_grid,
@@ -350,7 +350,7 @@ class Intelligence {
         // If i found a possible capture "on the left" add the new move to current_move
         if (res_left != null) {
           current_move += new Move(f_x, f_y, res_left._1, res_left._2, "capture")
-          var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Box(grid(x)(y)))
+          var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(grid(x)(y)))
           Chessboard.executeMoves(new_grid, current_move.toArray, MAX)
           // recoursive call
           checkForMultipleCapture(new_grid,
@@ -373,7 +373,7 @@ class Intelligence {
           }
 
           mult_moves_right += new Move(f_x, f_y, res_right._1, res_right._2, "capture")
-          var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Box(grid(x)(y)))
+          var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(grid(x)(y)))
           Chessboard.executeMoves(new_grid, mult_moves_right.toArray, MAX)
           // recoursive call
           checkForMultipleCapture(new_grid,
@@ -396,14 +396,14 @@ class Intelligence {
 	 * @param inc : function wich increments properly the x coordinate
 	 * @param inc_y : function used to increment the y coordinate when searching for an "capture" move
 	 */
-  private def getPawnMove(grid: Array[Array[Box]],
+  private def getPawnMove(grid: Array[Array[Square]],
                           from_x: Int,
                           from_y: Int,
                           x: Int,
                           y: Int,
                           inc: Int => Int,
                           inc_y: Int => Int): ListBuffer[ListBuffer[Move]] = {
-    /* look at what there is in the near box */
+    /* look at what there is in the near square */
     if (x < 0 || x > 7 || y < 0 || y > 7) return null
     grid(x)(y).content match {
       case null =>
@@ -416,7 +416,7 @@ class Intelligence {
         var t   = new ListBuffer[ListBuffer[Move]]()
         if (res != null) {
           t += new ListBuffer[Move](); t(0) += new Move(from_x, from_y, res._1, res._2, "capture")
-          var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Box(grid(x)(y)))
+          var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(grid(x)(y)))
           Chessboard.executeMoves(new_grid, t(0).toArray, MAX)
           checkForMultipleCapture(new_grid, res._1, res._2, inc, t(0), t)
         }
@@ -436,7 +436,7 @@ class Intelligence {
 	 * @param inc : function wich increments properly the x coordinate
 	 * @param inc_y : function used to increment the y coordinate when searching for an "capture" move
 	 */
-  private def getKingPawnMove(grid: Array[Array[Box]],
+  private def getKingPawnMove(grid: Array[Array[Square]],
                               from_x: Int,
                               from_y: Int,
                               x: Int,
@@ -444,7 +444,7 @@ class Intelligence {
                               inc: Int => Int,
                               inc_y: Int => Int,
                               opponent: String): ListBuffer[ListBuffer[Move]] = {
-    /* look at what there is in the near box */
+    /* look at what there is in the near square */
     if (x < 0 || x > 7 || y < 0 || y > 7) return null
     grid(x)(y).content match {
       case null =>
@@ -457,7 +457,7 @@ class Intelligence {
         if (res != null) {
           mult_moves += ListBuffer[Move]();
           mult_moves(0) += new Move(from_x, from_y, res._1, res._2, "capture")
-          var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Box(grid(x)(y)))
+          var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(grid(x)(y)))
           Chessboard.executeMoves(new_grid, mult_moves(0).toArray, MAX)
           checkForMultipleCapture(new_grid, res._1, res._2, inc, mult_moves(0), mult_moves)
         }
@@ -477,14 +477,14 @@ class Intelligence {
 	 *
 	 * return all possible moves from the given configuration
 	 */
-  def getPossibleMovesFor(grid: Array[Array[Box]],
+  def getPossibleMovesFor(grid: Array[Array[Square]],
                           player: String,
                           opponent: String): Array[Array[Move]] = {
     var moves = ListBuffer[Array[Move]]()
     val inc   = if (player == MAX) (x: Int) => x + 1 else (x: Int) => x - 1
     val dec   = if (player == MAX) (x: Int) => x - 1 else (x: Int) => x + 1
 
-    /* run over all the boxes, filtering them by content and valid increment */
+    /* run over all the squares, filtering them by content and valid increment */
     grid.foreach(
       r =>
         r.filter(b => b.content != null && b.content.player == player)
@@ -546,7 +546,7 @@ class Intelligence {
 	 * return : a couple of elemnents, composed by the evaluation of the current state of the chessboard and the move selected
 	 */
   def minMax(depth: Int,
-             grid: Array[Array[Box]],
+             grid: Array[Array[Square]],
              killerHeuristic: Boolean,
              eval: String): (Int, Array[Move]) = {
     nodes = 0
@@ -565,7 +565,7 @@ class Intelligence {
   }
 
   def maxMove(depth: Int,
-              game: Array[Array[Box]],
+              game: Array[Array[Square]],
               alpha: Int,
               beta: Int,
               eval: String): (Int, Array[Move]) = {
@@ -590,7 +590,7 @@ class Intelligence {
 
     moves.foreach(move => {
       nodes += 1
-      var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Box(game(x)(y)))
+      var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(game(x)(y)))
       Chessboard.executeMoves(new_grid, move, MAX)
       // tocca a Min!
       val min_move = minMove(depth - 1, new_grid, new_alpha, beta, eval)
@@ -611,7 +611,7 @@ class Intelligence {
   }
 
   def minMove(depth: Int,
-              game: Array[Array[Box]],
+              game: Array[Array[Square]],
               alpha: Int,
               beta: Int,
               eval: String): (Int, Array[Move]) = {
@@ -638,7 +638,7 @@ class Intelligence {
     moves.foreach(move => {
       // Costruisco una nuova scacchiera applicando la mossa corrente
       nodes += 1
-      var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Box(game(x)(y)))
+      var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(game(x)(y)))
       Chessboard.executeMoves(new_grid, move, MIN)
       // tocca a Min!
       val max_move = maxMove(depth - 1, new_grid, alpha, new_beta, eval)
@@ -656,11 +656,11 @@ class Intelligence {
     return best_move
   }
 
-  /*def minMax(depth : Int, grid : Array[Array[Box]],k:Boolean,s:String) : (Int,Array[Move]) = {
+  /*def minMax(depth : Int, grid : Array[Array[Square]],k:Boolean,s:String) : (Int,Array[Move]) = {
 		return maxMove(depth,grid,Int.MaxValue,Int.MinValue)
 	}
 	
-	def maxMove(depth : Int, game : Array[Array[Box]], alpha : Int, beta : Int) : (Int,Array[Move]) = {
+	def maxMove(depth : Int, game : Array[Array[Square]], alpha : Int, beta : Int) : (Int,Array[Move]) = {
 		if(depth == 0) return (evaluate2(MAX,game),null)
 		
 		val moves = getPossibleMovesFor(game,MAX,MIN)
@@ -668,7 +668,7 @@ class Intelligence {
 		var best_move : (Int,Array[Move]) = null
 		var new_alpha = alpha
 		moves.foreach(move => {
-			var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(game(x)(y)))
+			var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Square(game(x)(y)))
 			Chessboard.executeMoves(new_grid,move,MAX)
 			// tocca a Min!
 			val min_move = minMove(depth-1,new_grid,new_alpha,beta)
@@ -684,7 +684,7 @@ class Intelligence {
 		return best_move
 	}
 
-	def minMove(depth : Int,game : Array[Array[Box]], alpha : Int, beta : Int) : (Int,Array[Move]) = {
+	def minMove(depth : Int,game : Array[Array[Square]], alpha : Int, beta : Int) : (Int,Array[Move]) = {
 		if(depth == 0) {
 			//println("valutazione per player (depth = 0) +"+player+" : "+evaluate2(player,grid))
 			return (evaluate2(MAX,game),null)
@@ -697,7 +697,7 @@ class Intelligence {
 		var new_beta = beta
 		moves.foreach(move => {
 			// Costruisco una nuova scacchiera applicando la mossa corrente
-			var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Box(game(x)(y)))
+			var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Square(game(x)(y)))
 			Chessboard.executeMoves(new_grid,move,MIN)
 			// tocca a Min!
 			val max_move = maxMove(depth-1,new_grid,alpha,new_beta)
@@ -713,7 +713,7 @@ class Intelligence {
 	}
 	*/
 
-  def evaluate(player: String, grid: Array[Array[Box]], eval: String, inGame: String) = {
+  def evaluate(player: String, grid: Array[Array[Square]], eval: String, inGame: String) = {
     eval match {
       case "dummy" => evaluate1(player, grid)
       case "eval2" => evaluate2(player, grid)
@@ -729,7 +729,7 @@ class Intelligence {
 	 * @param player : player respect who calculate the evaluation function
 	 * @param grid : current chessboard situation
 	 */
-  def evaluate1(player: String, grid: Array[Array[Box]]) = {
+  def evaluate1(player: String, grid: Array[Array[Square]]) = {
     var num_player   = 0
     var num_opponent = 0
     grid.foreach(row =>
@@ -750,7 +750,7 @@ class Intelligence {
     num_player - num_opponent
   }
 
-  def evaluate2(player: String, grid: Array[Array[Box]]) = {
+  def evaluate2(player: String, grid: Array[Array[Square]]) = {
     var score = 0
     for (i <- 0 until 8) {
       for (j <- 0 until 8) {
@@ -782,7 +782,7 @@ class Intelligence {
     score
   }
 
-  def minSupport(player: String, grid: Array[Array[Box]], y: Int, x: Int): Int = {
+  def minSupport(player: String, grid: Array[Array[Square]], y: Int, x: Int): Int = {
     var score = 0
     var iR    = 0
     if (!Chessboard.isMoveLegal(x, y) || ((Chessboard.isMoveLegal(y + 1, x - 1) && grid(y + 1)(
@@ -800,7 +800,7 @@ class Intelligence {
     score
   }
 
-  def maxSupport(player: String, grid: Array[Array[Box]], y: Int, x: Int): Int = {
+  def maxSupport(player: String, grid: Array[Array[Square]], y: Int, x: Int): Int = {
     var score = 0
     var iR    = 0
     if (!Chessboard.isMoveLegal(y, x) || ((Chessboard.isMoveLegal(y - 1, x - 1) && grid(y - 1)(
@@ -818,7 +818,7 @@ class Intelligence {
     score
   }
 
-  def evaluate3(player: String, grid: Array[Array[Box]]) = {
+  def evaluate3(player: String, grid: Array[Array[Square]]) = {
     var score = 0
     for (i <- 0 until 8) {
       for (j <- 0 until 8) {
@@ -851,7 +851,7 @@ class Intelligence {
     score
   }
 
-  def evaluate4(player: String, grid: Array[Array[Box]], inGame: String) = {
+  def evaluate4(player: String, grid: Array[Array[Square]], inGame: String) = {
     var pawnFound = false
     var kingFound = false
     var pawnCount = 0

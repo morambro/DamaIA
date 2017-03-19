@@ -45,7 +45,7 @@ class LoadingPopUp extends Frame {
   centerOnScreen
 }
 
-class ChessBox(bk: Icon, var top_img: Image, var selected: Boolean) extends Label {
+class BoardSquare(bk: Icon, var top_img: Image, var selected: Boolean) extends Label {
 
   var empty = true
   opaque = true
@@ -114,22 +114,22 @@ class ChessboardView extends MainFrame {
   } catch {
     case ex: Exception => ex.printStackTrace
   }
-  var selected: ChessBox = null
+  var selected: BoardSquare = null
 
-  var boxes = Array.ofDim[ChessBox](8, 8)
+  var squares = Array.ofDim[BoardSquare](8, 8)
 
   // creazione della scacchiera
   for (i <- 0 until 8) {
     for (j <- 0 until 8) {
       // Posizioni pari
       if ((i + j) % 2 == 0) {
-        boxes(i)(j) =
-          new ChessBox(new ImageIcon(getClass.getResource("/imgs/dark_80x80.jpg")), null, false);
+        squares(i)(j) =
+          new BoardSquare(new ImageIcon(getClass.getResource("/imgs/dark_80x80.jpg")), null, false);
       } else {
-        boxes(i)(j) =
-          new ChessBox(new ImageIcon(getClass.getResource("/imgs/light_80x80.jpg")), null, false);
+        squares(i)(j) =
+          new BoardSquare(new ImageIcon(getClass.getResource("/imgs/light_80x80.jpg")), null, false);
       }
-      chessboard.contents += boxes(i)(j)
+      chessboard.contents += squares(i)(j)
     }
   }
 
@@ -138,14 +138,14 @@ class ChessboardView extends MainFrame {
   def setOperationForChessboard(op: (Int, Int, Int, Int) => Boolean) {
     for (i <- 0 until 8) {
       for (j <- 0 until 8) {
-        boxes(i)(j).listenTo(boxes(i)(j).mouse.clicks)
-        boxes(i)(j).reactions += {
+        squares(i)(j).listenTo(squares(i)(j).mouse.clicks)
+        squares(i)(j).reactions += {
           case (e: MouseClicked) => {
             /* retrieve the source of the event */
-            val box = e.source.asInstanceOf[ChessBox]
-            /* if the clicked box is Empty... */
-            if (box.empty) {
-              /* if there was a box previously selected, let's check if can move */
+            val square = e.source.asInstanceOf[BoardSquare]
+            /* if the clicked square is Empty... */
+            if (square.empty) {
+              /* if there was a square previously selected, let's check if can move */
               if (selected != null) {
                 println("sposto");
                 /* ask Game if the current move is legal and in that case, update */
@@ -156,28 +156,28 @@ class ChessboardView extends MainFrame {
                   replyButton.enabled = true
                 }
               } else {
-                // no boxes previously selected
+                // no squares previously selected
                 println(messages.getString("emptySquareSelected"));
               }
 
             } else {
-              if (box.top == black || box.top == black_king) {                
+              if (square.top == black || square.top == black_king) {                
                 println(messages.getString("pickedBlackPiece"));
                 return;
               }
-              // if the box clicked was selected, de-select it
-              if (box.top == white_selected) {
-                box.top = white
-                box.selected = false
+              // if the square clicked was selected, de-select it
+              if (square.top == white_selected) {
+                square.top = white
+                square.selected = false
                 selected = null
               } else {
                 // otherwise, select it
-                if (box.top == white) box.top = white_selected
-                if (box.top == white_king) box.top = white_king_selected
-                box.selected = true
-                selected = box; selected.x = i; selected.y = j
+                if (square.top == white) square.top = white_selected
+                if (square.top == white_king) square.top = white_king_selected
+                square.selected = true
+                selected = square; selected.x = i; selected.y = j
               }
-              box.repaint
+              square.repaint
             }
           }
         }
@@ -260,13 +260,13 @@ class ChessboardView extends MainFrame {
     for (i <- 0 until 8) {
       for (j <- 0 until 8) {
         chessboard(i)(j) match {
-          case "w"  => boxes(i)(j).top = white
-          case "b"  => boxes(i)(j).top = black
-          case "ww" => boxes(i)(j).top = white_king
-          case "bb" => boxes(i)(j).top = black_king
-          case _    => boxes(i)(j).top = null
+          case "w"  => squares(i)(j).top = white
+          case "b"  => squares(i)(j).top = black
+          case "ww" => squares(i)(j).top = white_king
+          case "bb" => squares(i)(j).top = black_king
+          case _    => squares(i)(j).top = null
         }
-        boxes(i)(j).repaint
+        squares(i)(j).repaint
       }
     }
   }
