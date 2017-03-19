@@ -30,7 +30,7 @@ import javax.imageio.ImageIO
 import scala.swing.Dialog._
 
 class LoadingPopUp extends Frame {
-	val i = new ImageIcon("imgs/loading.gif")
+    val i = new ImageIcon(getClass.getResource("/imgs/loading.gif"))
     contents = new BorderPanel(){
 		add(
 			new Label{
@@ -102,12 +102,12 @@ class ChessboardView extends MainFrame {
     var white_king_selected : Image = null
     
     try{
-        white = ImageIO.read(new File("imgs/w.png"))
-        black = ImageIO.read(new File("imgs/b.png"))
-        white_selected = ImageIO.read(new File("imgs/w_selected.png"))
-        white_king = ImageIO.read(new File("imgs/ww.png"))
-		black_king = ImageIO.read(new File("imgs/bb.png"))
-		white_king_selected = ImageIO.read(new File("imgs/ww_selected.png"))
+        white = ImageIO.read(getClass.getResource("/imgs/w.png"))
+        black = ImageIO.read(getClass.getResource("/imgs/b.png"))
+        white_selected = ImageIO.read(getClass.getResource("/imgs/w_selected.png"))
+        white_king = ImageIO.read(getClass.getResource("/imgs/ww.png"))
+	black_king = ImageIO.read(getClass.getResource("/imgs/bb.png"))
+	white_king_selected = ImageIO.read(getClass.getResource("/imgs/ww_selected.png"))
     }catch{
         case ex : Exception => ex.printStackTrace
     }
@@ -129,9 +129,9 @@ class ChessboardView extends MainFrame {
 		for(j <- 0 until 8){
 			// Posizioni pari
 			if((i+j)%2 == 0){
-				boxes(i)(j) = new ChessBox(new ImageIcon("imgs/dark_80x80.jpg"),null,false);
+				boxes(i)(j) = new ChessBox(new ImageIcon(getClass.getResource("/imgs/dark_80x80.jpg")),null,false);
 			}else{
-				boxes(i)(j) = new ChessBox(new ImageIcon("imgs/light_80x80.jpg"),null,false);
+				boxes(i)(j) = new ChessBox(new ImageIcon(getClass.getResource("/imgs/light_80x80.jpg")),null,false);
 			}
 			chessboard.contents += boxes(i)(j)
 		}
