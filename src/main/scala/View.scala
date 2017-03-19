@@ -72,7 +72,7 @@ class BoardSquare(bk: Icon, var top_img: Image, var selected: Boolean) extends L
 
 }
 
-class ChessboardView extends MainFrame {
+class BoardView extends MainFrame {
   var currentLocale = Locale.getDefault();
   var messages = ResourceBundle.getBundle("MessagesBundle", currentLocale);
   
@@ -80,7 +80,7 @@ class ChessboardView extends MainFrame {
 
   val loadingPopup = new LoadingPopUp
 
-  val chessboard  = new GridPanel(8, 8)
+  val board  = new GridPanel(8, 8)
   val replyButton = new Button(messages.getString("reply"))
 
   val depth_box  = new ComboBox[Int](List(10, 8, 6, 4, 2, 1))
@@ -129,13 +129,13 @@ class ChessboardView extends MainFrame {
         squares(i)(j) =
           new BoardSquare(new ImageIcon(getClass.getResource("/imgs/light_80x80.jpg")), null, false);
       }
-      chessboard.contents += squares(i)(j)
+      board.contents += squares(i)(j)
     }
   }
 
   def getDepth = depth_box.selection.item
 
-  def setOperationForChessboard(op: (Int, Int, Int, Int) => Boolean) {
+  def setOperationForBoard(op: (Int, Int, Int, Int) => Boolean) {
     for (i <- 0 until 8) {
       for (j <- 0 until 8) {
         squares(i)(j).listenTo(squares(i)(j).mouse.clicks)
@@ -193,7 +193,7 @@ class ChessboardView extends MainFrame {
         contents += newgame
       }
     }, BorderPanel.Position.North)
-    add(chessboard, BorderPanel.Position.Center)
+    add(board, BorderPanel.Position.Center)
     //add(new FlowPanel(){contents += replyButton}, BorderPanel.Position.South)
     add(
       new GridPanel(2, 0) {
@@ -254,12 +254,12 @@ class ChessboardView extends MainFrame {
   }
 
   /**
-    * Function called to update the chessboard
+    * Function called to update the board
     */
-  def updateChessboard(chessboard: Array[Array[String]]) {
+  def updateBoard(board: Array[Array[String]]) {
     for (i <- 0 until 8) {
       for (j <- 0 until 8) {
-        chessboard(i)(j) match {
+        board(i)(j) match {
           case "w"  => squares(i)(j).top = white
           case "b"  => squares(i)(j).top = black
           case "ww" => squares(i)(j).top = white_king

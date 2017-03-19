@@ -38,7 +38,7 @@ class Square(val x: Int, val y: Int) {
   }
 }
 
-class Chessboard {
+class Board {
 
   /* ------------------------ Initializations --------------------------------*/
   var grid = Array.tabulate(8, 8)(new Square(_, _))
@@ -84,7 +84,7 @@ class Chessboard {
 /**
   * Companion object including functions to execte moves (side-effect)
   */
-object Chessboard {
+object Board {
 
   def move(grid: Array[Array[Square]], form_x: Int, from_y: Int, to_x: Int, to_y: Int): Boolean = {
     if (grid(form_x)(from_y).content != null) {
@@ -111,9 +111,9 @@ object Chessboard {
   }
 
   /**
-	 * Performs implicit conversion from Chessboard to Array[Array[String]]
+	 * Performs implicit conversion from Board to Array[Array[String]]
 	 */
-  implicit def chessboardToStringMatrix(c: Chessboard) = {
+  implicit def chessboardToStringMatrix(c: Board) = {
     Array.tabulate(8, 8)((x, y) =>
       c.grid(x)(y).content match {
         case p: KingPawn => p.player.concat(p.player)

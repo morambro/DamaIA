@@ -11,27 +11,27 @@ import java.text.MessageFormat;
 class Game private (val white_must_capture: Boolean) {
   var currentLocale = Locale.getDefault();
   var messages = ResourceBundle.getBundle("MessagesBundle", currentLocale);
-  var pView = new ChessboardView
+  var pView = new BoardView
   var formatter = new MessageFormat("");
   formatter.setLocale(currentLocale);
 
   def view = pView
-  def view_=(view: ChessboardView) { pView = view }
+  def view_=(view: BoardView) { pView = view }
 
-  var pChessboard = new Chessboard
+  var pBoard = new Board
 
-  view.updateChessboard(chessboard)
+  view.updateBoard(board)
 
-  def chessboard = pChessboard
-  def chessboard_=(chessboard: Chessboard) { pChessboard = chessboard }
+  def board = pBoard
+  def board_=(board: Board) { pBoard = board }
 
   val engine = new Engine
 
   var multiple_moves: Array[Array[Move]] = null
   var finished                           = true
 
-  view.setOperationForChessboard(
-    (x, y, i, j) => updateChessboard(x, y, i, j)
+  view.setOperationForBoard(
+    (x, y, i, j) => updateBoard(x, y, i, j)
   )
 
   /**
@@ -49,7 +49,7 @@ class Game private (val white_must_capture: Boolean) {
 
   def replayActions() {
     val heur = if (view.getHeuristic == "killer heuristic") true else false
-    val s    = intelligence.minimax(view.getDepth, chessboard.grid, heur, view.getEval)
+    val s    = engine.minimax(view.getDepth, board.grid, heur, view.getEval)
 
     if (s._2 != null) {
       {
@@ -58,9 +58,9 @@ class Game private (val white_must_capture: Boolean) {
         println(formatter.format(stuff))
       }
       s._2.foreach(m => m.printMove)
-      Chessboard.executeMoves(chessboard.grid, s._2, "b")
-      view.updateChessboard(chessboard)
-      chessboard.printBoard
+      Board.executeMoves(board.grid, s._2, "b")
+      view.updateBoard(board)
+      board.printBoard
     } else {
       println(messages.getString("noLegalMoves"));
       view.showPopUpMessage(messages.getString("gameOverWhiteWins"));
@@ -74,15 +74,15 @@ class Game private (val white_must_capture: Boolean) {
   /**
 	 * Method callable by the view after human interaction (white player move!!)
 	 */
-  def updateChessboard(x: Int, y: Int, to_x: Int, to_y: Int): Boolean = {
+  def updateBoard(x: Int, y: Int, to_x: Int, to_y: Int): Boolean = {
     val move    = new Move(x, y, to_x, to_y, "move")
-    val isValid = Chessboard.isMoveValid(chessboard.grid, move, "w", "b")
+    val isValid = Board.isMoveValid(board.grid, move, "w", "b")
     // Force user to choose a "capture" move
 
     if (isValid) {
 
       if (white_must_capture && move.move_type != "capture") {
-        val moves = engine.getLegalMovesFor(chessboard.grid, "w", "b")
+        val moves = engine.getLegalMovesFor(board.grid, "w", "b")
         // If the first element of the first move array is a captur move...
         if (moves.length > 0 && moves(0) != null && moves(0).length > 0 && moves(0)(0).move_type == "capture") {
           println(messages.getString("illegalMove") + " " + messages.getString("captureIsMandatory"));
@@ -92,7 +92,7 @@ class Game private (val white_must_capture: Boolean) {
       }
       // Force user to choose longest "capture" move
       if (white_must_capture && move.move_type == "capture") {
-        val moves = engine.getLegalMovesFor(chessboard.grid, "w", "b")
+        val moves = engine.getLegalMovesFor(board.grid, "w", "b")
 
         if (moves.length > 0) {
           // curr contains all (multiple) moves which first move is 'move'.
@@ -126,8 +126,8 @@ class Game private (val white_must_capture: Boolean) {
         }
       }
 
-      Chessboard.executeMoves(chessboard.grid, Array(move), "w")
-      view.updateChessboard(chessboard)
+      Board.executeMoves(board.grid, Array(move), "w")
+      view.updateBoard(board)
       if (finished) {
         view.setStatus("b", messages.getString("blackMoves"))
         multiple_moves = null
@@ -162,7 +162,7 @@ object Game {
   }
 
   def newGame() {
-    instance.chessboard = new Chessboard; instance.view.updateChessboard(instance.chessboard)
+    instance.board = new Board; instance.view.updateBoard(instance.board)
   }
 
 }

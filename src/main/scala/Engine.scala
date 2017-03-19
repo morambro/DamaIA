@@ -67,7 +67,7 @@ class Engine {
         if (res_left != null) {
           current_move += new Move(f_x, f_y, res_left._1, res_left._2, "capture")
           var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(grid(x)(y)))
-          Chessboard.executeMoves(new_grid, current_move.toArray, MAX)
+          Board.executeMoves(new_grid, current_move.toArray, MAX)
           // recoursive call
           checkForMultipleCapture(new_grid,
                                   res_left._1,
@@ -90,7 +90,7 @@ class Engine {
 
           mult_moves_right += new Move(f_x, f_y, res_right._1, res_right._2, "capture")
           var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(grid(x)(y)))
-          Chessboard.executeMoves(new_grid, mult_moves_right.toArray, MAX)
+          Board.executeMoves(new_grid, mult_moves_right.toArray, MAX)
           // recoursive call
           checkForMultipleCapture(new_grid,
                                   res_right._1,
@@ -112,7 +112,7 @@ class Engine {
 
           mult_moves_right += new Move(f_x, f_y, res_up_left._1, res_up_left._2, "capture")
           var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(grid(x)(y)))
-          Chessboard.executeMoves(new_grid, mult_moves_right.toArray, MAX)
+          Board.executeMoves(new_grid, mult_moves_right.toArray, MAX)
           // recoursive call
           checkForMultipleCapture(new_grid,
                                   res_up_left._1,
@@ -133,7 +133,7 @@ class Engine {
 
           mult_moves_right += new Move(f_x, f_y, res_up_right._1, res_up_right._2, "capture")
           var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(grid(x)(y)))
-          Chessboard.executeMoves(new_grid, mult_moves_right.toArray, MAX)
+          Board.executeMoves(new_grid, mult_moves_right.toArray, MAX)
           // recoursive call
           checkForMultipleCapture(new_grid,
                                   res_up_right._1,
@@ -151,7 +151,7 @@ class Engine {
         if (res_left != null) {
           current_move += new Move(f_x, f_y, res_left._1, res_left._2, "capture")
           var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(grid(x)(y)))
-          Chessboard.executeMoves(new_grid, current_move.toArray, MAX)
+          Board.executeMoves(new_grid, current_move.toArray, MAX)
           // recoursive call
           checkForMultipleCapture(new_grid,
                                   res_left._1,
@@ -174,7 +174,7 @@ class Engine {
 
           mult_moves_right += new Move(f_x, f_y, res_right._1, res_right._2, "capture")
           var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(grid(x)(y)))
-          Chessboard.executeMoves(new_grid, mult_moves_right.toArray, MAX)
+          Board.executeMoves(new_grid, mult_moves_right.toArray, MAX)
           // recoursive call
           checkForMultipleCapture(new_grid,
                                   res_right._1,
@@ -217,7 +217,7 @@ class Engine {
         if (res != null) {
           t += new ListBuffer[Move](); t(0) += new Move(from_x, from_y, res._1, res._2, "capture")
           var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(grid(x)(y)))
-          Chessboard.executeMoves(new_grid, t(0).toArray, MAX)
+          Board.executeMoves(new_grid, t(0).toArray, MAX)
           checkForMultipleCapture(new_grid, res._1, res._2, inc, t(0), t)
         }
         return t
@@ -258,7 +258,7 @@ class Engine {
           mult_moves += ListBuffer[Move]();
           mult_moves(0) += new Move(from_x, from_y, res._1, res._2, "capture")
           var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(grid(x)(y)))
-          Chessboard.executeMoves(new_grid, mult_moves(0).toArray, MAX)
+          Board.executeMoves(new_grid, mult_moves(0).toArray, MAX)
           checkForMultipleCapture(new_grid, res._1, res._2, inc, mult_moves(0), mult_moves)
         }
         return mult_moves
@@ -391,7 +391,7 @@ class Engine {
     moves.foreach(move => {
       nodes += 1
       var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(game(x)(y)))
-      Chessboard.executeMoves(new_grid, move, MAX)
+      Board.executeMoves(new_grid, move, MAX)
       // tocca a Min!
       val min_move = minMove(depth - 1, new_grid, new_alpha, beta, eval)
 
@@ -439,7 +439,7 @@ class Engine {
       // Costruisco una nuova scacchiera applicando la mossa corrente
       nodes += 1
       var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(game(x)(y)))
-      Chessboard.executeMoves(new_grid, move, MIN)
+      Board.executeMoves(new_grid, move, MIN)
       // tocca a Min!
       val max_move = maxMove(depth - 1, new_grid, alpha, new_beta, eval)
       if (best_move == null || best_move._1 > max_move._1) {
@@ -469,7 +469,7 @@ class Engine {
 		var new_alpha = alpha
 		moves.foreach(move => {
 			var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Square(game(x)(y)))
-			Chessboard.executeMoves(new_grid,move,MAX)
+			Board.executeMoves(new_grid,move,MAX)
 			// tocca a Min!
 			val min_move = minMove(depth-1,new_grid,new_alpha,beta)
 
@@ -498,7 +498,7 @@ class Engine {
 		moves.foreach(move => {
 			// Costruisco una nuova scacchiera applicando la mossa corrente
 			var new_grid = Array.tabulate(8,8)((x:Int,y:Int) => new Square(game(x)(y)))
-			Chessboard.executeMoves(new_grid,move,MIN)
+			Board.executeMoves(new_grid,move,MIN)
 			// tocca a Min!
 			val max_move = maxMove(depth-1,new_grid,alpha,new_beta)
 			if(best_move == null || best_move._1 > max_move._1){
@@ -585,8 +585,8 @@ class Engine {
   def minSupport(player: String, grid: Array[Array[Square]], y: Int, x: Int): Int = {
     var score = 0
     var iR    = 0
-    if (!Chessboard.isMoveLegal(x, y) || ((Chessboard.isMoveLegal(y + 1, x - 1) && grid(y + 1)(
-          x - 1).content != null && grid(y + 1)(x - 1).content.player != player) && (Chessboard.isMoveLegal(
+    if (!Board.isMoveLegal(x, y) || ((Board.isMoveLegal(y + 1, x - 1) && grid(y + 1)(
+          x - 1).content != null && grid(y + 1)(x - 1).content.player != player) && (Board.isMoveLegal(
           y + 1,
           x + 1) && grid(y + 1)(x + 1).content != null && grid(y + 1)(x + 1).content.player != player)))
       if (y == 8) 0
@@ -603,8 +603,8 @@ class Engine {
   def maxSupport(player: String, grid: Array[Array[Square]], y: Int, x: Int): Int = {
     var score = 0
     var iR    = 0
-    if (!Chessboard.isMoveLegal(y, x) || ((Chessboard.isMoveLegal(y - 1, x - 1) && grid(y - 1)(
-          x - 1).content != null && grid(y - 1)(x - 1).content.player == player) && (Chessboard.isMoveLegal(
+    if (!Board.isMoveLegal(y, x) || ((Board.isMoveLegal(y - 1, x - 1) && grid(y - 1)(
+          x - 1).content != null && grid(y - 1)(x - 1).content.player == player) && (Board.isMoveLegal(
           y - 1,
           x + 1) && grid(y - 1)(x + 1).content != null && grid(y - 1)(x + 1).content.player == player)))
       if (y == -1) 0
