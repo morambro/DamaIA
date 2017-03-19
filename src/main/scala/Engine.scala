@@ -586,8 +586,8 @@ class Engine {
   def minSupport(player: Player, grid: Array[Array[Square]], y: Int, x: Int): Int = {
     var score = 0
     var iR    = 0
-    if (!Board.isMoveLegal(x, y) || ((Board.isMoveLegal(y + 1, x - 1) && grid(y + 1)(
-          x - 1).content != null && grid(y + 1)(x - 1).content.player != player) && (Board.isMoveLegal(
+    if (!Board.isSquareWithinBoard(x, y) || ((Board.isSquareWithinBoard(y + 1, x - 1) && grid(y + 1)(
+          x - 1).content != null && grid(y + 1)(x - 1).content.player != player) && (Board.isSquareWithinBoard(
           y + 1,
           x + 1) && grid(y + 1)(x + 1).content != null && grid(y + 1)(x + 1).content.player != player)))
       if (y == 8) 0
@@ -604,8 +604,8 @@ class Engine {
   def maxSupport(player: Player, grid: Array[Array[Square]], y: Int, x: Int): Int = {
     var score = 0
     var iR    = 0
-    if (!Board.isMoveLegal(y, x) || ((Board.isMoveLegal(y - 1, x - 1) && grid(y - 1)(
-          x - 1).content != null && grid(y - 1)(x - 1).content.player == player) && (Board.isMoveLegal(
+    if (!Board.isSquareWithinBoard(y, x) || ((Board.isSquareWithinBoard(y - 1, x - 1) && grid(y - 1)(
+          x - 1).content != null && grid(y - 1)(x - 1).content.player == player) && (Board.isSquareWithinBoard(
           y - 1,
           x + 1) && grid(y - 1)(x + 1).content != null && grid(y - 1)(x + 1).content.player == player)))
       if (y == -1) 0

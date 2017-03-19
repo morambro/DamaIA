@@ -185,7 +185,7 @@ object Board {
     false
   }
 
-  def isMoveLegal(y: Int, x: Int): Boolean = {
+  def isSquareWithinBoard(y: Int, x: Int): Boolean = {
     (x > -1 && x < 8 && y > -1 && y < 8)
   }
 }
