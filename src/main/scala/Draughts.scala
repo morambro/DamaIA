@@ -103,7 +103,7 @@ object Board {
     false
   }
 
-  def executeMoves(grid: Array[Array[Square]], moves: Array[Move], player: Player) {
+  def executeMoves(grid: Array[Array[Square]], moves: Array[Move]) {
     moves.foreach(m => {
       move(grid, m.from_x, m.from_y, m.to_x, m.to_y)
       //m.printMove
@@ -112,9 +112,15 @@ object Board {
         //println("mangiata pedina in ("+toCapture.x+","+toCapture.y+") = "+toCapture.content)
         toCapture.content = null
       }
+
+      var dest = grid(m.to_x)(m.to_y).content;
       // If the pawn reaches the first row, becomes a King
-      if (m.to_x == 0 && player == White) grid(m.to_x)(m.to_y).content = new KingPawn(White)
-      if (m.to_x == 7 && player == Black) grid(m.to_x)(m.to_y).content = new KingPawn(Black)
+      if (m.to_x == 0 && dest != null) {
+        if(dest.player == White) grid(m.to_x)(m.to_y).content = new KingPawn(White)
+      }
+      if (m.to_x == 7 && dest != null) {
+        if (dest.player == Black) grid(m.to_x)(m.to_y).content = new KingPawn(Black)
+      }
     })
   }
 

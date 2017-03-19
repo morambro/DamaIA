@@ -58,7 +58,7 @@ class Game private (val white_must_capture: Boolean) {
         println(formatter.format(stuff))
       }
       s._2.foreach(m => m.printMove)
-      Board.executeMoves(board.grid, s._2, Black)
+      Board.executeMoves(board.grid, s._2)
       view.updateBoard(board)
       board.printBoard
     } else {
@@ -126,7 +126,7 @@ class Game private (val white_must_capture: Boolean) {
         }
       }
 
-      Board.executeMoves(board.grid, Array(move), White)
+      Board.executeMoves(board.grid, Array(move))
       view.updateBoard(board)
       if (finished) {
         view.setStatus(Black.toString, messages.getString("blackMoves"))
