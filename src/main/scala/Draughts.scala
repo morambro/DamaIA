@@ -263,7 +263,7 @@ class Intelligence {
         val res_up_right = canCapture(grid, f_x, f_y, (a: Int, b: Int) => (a - 2, b + 2))
         val res_up_left  = canCapture(grid, f_x, f_y, (a: Int, b: Int) => (a - 2, b - 2))
 
-        // If i found a possible capture "on the left" add the new move to current_move
+        // If i found a legal capture "on the left" add the new move to current_move
         if (res_left != null) {
           current_move += new Move(f_x, f_y, res_left._1, res_left._2, "capture")
           var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(grid(x)(y)))
@@ -347,7 +347,7 @@ class Intelligence {
         val res_left  = canCapture(grid, f_x, f_y, (a: Int, b: Int) => (inc(inc(a)), b - 2))
         val res_right = canCapture(grid, f_x, f_y, (a: Int, b: Int) => (inc(inc(a)), b + 2))
 
-        // If i found a possible capture "on the left" add the new move to current_move
+        // If i found a legal capture "on the left" add the new move to current_move
         if (res_left != null) {
           current_move += new Move(f_x, f_y, res_left._1, res_left._2, "capture")
           var new_grid = Array.tabulate(8, 8)((x: Int, y: Int) => new Square(grid(x)(y)))
@@ -388,7 +388,7 @@ class Intelligence {
   }
 
   /**
-	 * Creates the move for a simple pawngiven from-coordinates and to-coordiantes. It checks if there is a possible "capture" move.
+	 * Creates the move for a simple pawngiven from-coordinates and to-coordiantes. It checks if there is a legal "capture" move.
 	 *
 	 * @param grid : current configuration
 	 * @param form_x,from_y : from-coordinates
@@ -428,7 +428,7 @@ class Intelligence {
   }
 
   /**
-	 * Creates the move for a king pawn given from-coordinates and to-coordiantes. It checks if there is a possible "capture" move.
+	 * Creates the move for a king pawn given from-coordinates and to-coordiantes. It checks if there is a legal "capture" move.
 	 *
 	 * @param grid : current configuration
 	 * @param form_x,from_y : from-coordinates
@@ -469,15 +469,15 @@ class Intelligence {
   }
 
   /**
-	 * Given a configuration (grid), a player and his opponent, returns all the possible moves for the current player
+	 * Given a configuration (grid), a player and his opponent, returns all the legal moves for the current player
 	 *
 	 * @param grid : configuration
 	 * @param player : current player
 	 * @param opponent : the opponent
 	 *
-	 * return all possible moves from the given configuration
+	 * return all legal moves from the given configuration
 	 */
-  def getPossibleMovesFor(grid: Array[Array[Square]],
+  def getLegalMovesFor(grid: Array[Array[Square]],
                           player: String,
                           opponent: String): Array[Array[Move]] = {
     var moves = ListBuffer[Array[Move]]()
@@ -512,11 +512,11 @@ class Intelligence {
               // Check only in one direction
               case p: Pawn => {
                 val res_moves = getPawnMove(grid, b.x, b.y, inc(b.x), b.y + 1, inc, (_ + 2))
-                // If we have possible moves, add them in moves array
+                // If we have legal moves, add them in moves array
                 if (res_moves != null && res_moves.length > 0)
                   res_moves.foreach(move => moves += move.toArray)
                 val res_moves2 = getPawnMove(grid, b.x, b.y, inc(b.x), b.y - 1, inc, (_ - 2))
-                // If we have possible moves, add them in moves array
+                // If we have legal moves, add them in moves array
                 if (res_moves2 != null && res_moves2.length > 0)
                   res_moves2.foreach(move => moves += move.toArray)
               }
@@ -571,7 +571,7 @@ class Intelligence {
               eval: String): (Int, Array[Move]) = {
     if (depth == 0) return (evaluate(MAX, game, eval, MAX), null)
 
-    val moves = getPossibleMovesFor(game, MAX, MIN)
+    val moves = getLegalMovesFor(game, MAX, MIN)
     if (moves == null || moves.length == 0) return (evaluate(MAX, game, eval, MAX), null)
     var best_move: (Int, Array[Move]) = null
     var new_alpha                     = alpha
@@ -616,7 +616,7 @@ class Intelligence {
               beta: Int,
               eval: String): (Int, Array[Move]) = {
     if (depth == 0) return (evaluate(MAX, game, eval, MIN), null)
-    val moves = getPossibleMovesFor(game, MIN, MAX)
+    val moves = getLegalMovesFor(game, MIN, MAX)
 
     if (moves == null || moves.length == 0) return (evaluate(MAX, game, eval, MIN), null)
 
@@ -663,7 +663,7 @@ class Intelligence {
 	def maxMove(depth : Int, game : Array[Array[Square]], alpha : Int, beta : Int) : (Int,Array[Move]) = {
 		if(depth == 0) return (evaluate2(MAX,game),null)
 		
-		val moves = getPossibleMovesFor(game,MAX,MIN)
+		val moves = getLegalMovesFor(game,MAX,MIN)
 		if(moves == null || moves.length == 0) return (evaluate2(MAX,game),null)
 		var best_move : (Int,Array[Move]) = null
 		var new_alpha = alpha
@@ -689,7 +689,7 @@ class Intelligence {
 			//println("valutazione per player (depth = 0) +"+player+" : "+evaluate2(player,grid))
 			return (evaluate2(MAX,game),null)
 		}
-		val moves = getPossibleMovesFor(game,MIN,MAX)
+		val moves = getLegalMovesFor(game,MIN,MAX)
 		
 		if(moves == null || moves.length == 0) return (evaluate2(MAX,game),null)
 		

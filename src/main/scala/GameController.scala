@@ -66,8 +66,8 @@ class Game private (val white_must_capture: Boolean) {
       view.showPopUpMessage(messages.getString("gameOverWhiteWins"));
     }
 
-    // If white doesn't have other possible moves, communicates that black wins!
-    if (intelligence.getPossibleMovesFor(chessboard.grid, "w", "b").length == 0)
+    // If white doesn't have other legal moves, communicates that black wins!
+    if (intelligence.getLegalMovesFor(chessboard.grid, "w", "b").length == 0)
       view.showPopUpMessage(messages.getString("gameOverBlackWins"));
   }
 
@@ -82,7 +82,7 @@ class Game private (val white_must_capture: Boolean) {
     if (isValid) {
 
       if (white_must_capture && move.move_type != "capture") {
-        val moves = intelligence.getPossibleMovesFor(chessboard.grid, "w", "b")
+        val moves = intelligence.getLegalMovesFor(chessboard.grid, "w", "b")
         // If the first element of the first move array is a captur move...
         if (moves.length > 0 && moves(0) != null && moves(0).length > 0 && moves(0)(0).move_type == "capture") {
           println(messages.getString("illegalMove") + " " + messages.getString("captureIsMandatory"));
@@ -92,7 +92,7 @@ class Game private (val white_must_capture: Boolean) {
       }
       // Force user to choose longest "capture" move
       if (white_must_capture && move.move_type == "capture") {
-        val moves = intelligence.getPossibleMovesFor(chessboard.grid, "w", "b")
+        val moves = intelligence.getLegalMovesFor(chessboard.grid, "w", "b")
 
         if (moves.length > 0) {
           // curr contains all (multiple) moves which first move is 'move'.
