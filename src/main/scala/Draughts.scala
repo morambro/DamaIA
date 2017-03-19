@@ -134,7 +134,7 @@ object Board {
   /**
 	 * Tells if a given move is a valid move for white player
 	 */
-  def isMoveValid(grid: Array[Array[Square]], m: Move, player: Player, opponent: Player): Boolean = {
+  def isMoveLegal(grid: Array[Array[Square]], m: Move, player: Player, opponent: Player): Boolean = {
 
     grid(m.from_x)(m.from_y).content match {
       // Case of white king pawn

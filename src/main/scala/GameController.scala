@@ -76,10 +76,10 @@ class Game private (val white_must_capture: Boolean) {
 	 */
   def updateBoard(x: Int, y: Int, to_x: Int, to_y: Int): Boolean = {
     val move    = new Move(x, y, to_x, to_y, "move")
-    val isValid = Board.isMoveValid(board.grid, move, White, Black)
+    val isLegal = Board.isMoveLegal(board.grid, move, White, Black)
     // Force user to choose a "capture" move
 
-    if (isValid) {
+    if (isLegal) {
 
       if (white_must_capture && move.move_type != "capture") {
         val moves = engine.getLegalMovesFor(board.grid, White, Black)
@@ -143,7 +143,7 @@ class Game private (val white_must_capture: Boolean) {
         multiple_moves.foreach(a => { if (a != null) a.foreach(m => m.printMove); println })
       }
     }
-    isValid
+    isLegal
   }
 }
 
