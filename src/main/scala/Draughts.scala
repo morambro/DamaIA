@@ -18,7 +18,7 @@ class Pawn(val player: Player) {
 class KingPawn(player: Player) extends Pawn(player)
 
 /**
-  * logic square of the chessboard
+  * logic square of the board
   */
 class Square(val x: Int, val y: Int) {
 
@@ -121,7 +121,7 @@ object Board {
   /**
 	 * Performs implicit conversion from Board to Array[Array[String]]
 	 */
-  implicit def chessboardToStringMatrix(c: Board) = {
+  implicit def boardToStringMatrix(c: Board) = {
     Array.tabulate(8, 8)((x, y) =>
       c.grid(x)(y).content match {
         case p: KingPawn => p.player.toString.concat(p.player.toString)
