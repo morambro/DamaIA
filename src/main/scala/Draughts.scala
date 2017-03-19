@@ -545,7 +545,7 @@ class Intelligence {
 	 *
 	 * return : a couple of elemnents, composed by the evaluation of the current state of the chessboard and the move selected
 	 */
-  def minMax(depth: Int,
+  def minimax(depth: Int,
              grid: Array[Array[Square]],
              killerHeuristic: Boolean,
              eval: String): (Int, Array[Move]) = {
@@ -656,7 +656,7 @@ class Intelligence {
     return best_move
   }
 
-  /*def minMax(depth : Int, grid : Array[Array[Square]],k:Boolean,s:String) : (Int,Array[Move]) = {
+  /*def minimax(depth : Int, grid : Array[Array[Square]],k:Boolean,s:String) : (Int,Array[Move]) = {
 		return maxMove(depth,grid,Int.MaxValue,Int.MinValue)
 	}
 	

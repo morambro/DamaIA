@@ -49,7 +49,7 @@ class Game private (val white_must_capture: Boolean) {
 
   def replayActions() {
     val heur = if (view.getHeuristic == "killer heuristic") true else false
-    val s    = intelligence.minMax(view.getDepth, chessboard.grid, heur, view.getEval)
+    val s    = intelligence.minimax(view.getDepth, chessboard.grid, heur, view.getEval)
 
     if (s._2 != null) {
       {
