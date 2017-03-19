@@ -6,7 +6,7 @@ import scala.math._
 /**
   * Class which represents the intelligent engine of the game
   */
-class Intelligence {
+class Engine {
 
   val MAX = "b"
   val MIN = "w"

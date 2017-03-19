@@ -25,7 +25,7 @@ class Game private (val white_must_capture: Boolean) {
   def chessboard = pChessboard
   def chessboard_=(chessboard: Chessboard) { pChessboard = chessboard }
 
-  val intelligence = new Intelligence
+  val engine = new Engine
 
   var multiple_moves: Array[Array[Move]] = null
   var finished                           = true
@@ -67,7 +67,7 @@ class Game private (val white_must_capture: Boolean) {
     }
 
     // If white doesn't have other legal moves, communicates that black wins!
-    if (intelligence.getLegalMovesFor(chessboard.grid, "w", "b").length == 0)
+    if (engine.getLegalMovesFor(board.grid, "w", "b").length == 0)
       view.showPopUpMessage(messages.getString("gameOverBlackWins"));
   }
 
@@ -82,7 +82,7 @@ class Game private (val white_must_capture: Boolean) {
     if (isValid) {
 
       if (white_must_capture && move.move_type != "capture") {
-        val moves = intelligence.getLegalMovesFor(chessboard.grid, "w", "b")
+        val moves = engine.getLegalMovesFor(chessboard.grid, "w", "b")
         // If the first element of the first move array is a captur move...
         if (moves.length > 0 && moves(0) != null && moves(0).length > 0 && moves(0)(0).move_type == "capture") {
           println(messages.getString("illegalMove") + " " + messages.getString("captureIsMandatory"));
@@ -92,7 +92,7 @@ class Game private (val white_must_capture: Boolean) {
       }
       // Force user to choose longest "capture" move
       if (white_must_capture && move.move_type == "capture") {
-        val moves = intelligence.getLegalMovesFor(chessboard.grid, "w", "b")
+        val moves = engine.getLegalMovesFor(chessboard.grid, "w", "b")
 
         if (moves.length > 0) {
           // curr contains all (multiple) moves which first move is 'move'.
