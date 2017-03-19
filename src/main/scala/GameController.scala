@@ -8,7 +8,7 @@ import java.text.MessageFormat;
   * Logic class which coordinates the different parts of the game. It offers also methods callable by the View.
   *
   */
-class Game private (val white_must_eat: Boolean) {
+class Game private (val white_must_capture: Boolean) {
   var currentLocale = Locale.getDefault();
   var messages = ResourceBundle.getBundle("MessagesBundle", currentLocale);
   var pView = new ChessboardView
@@ -81,7 +81,7 @@ class Game private (val white_must_eat: Boolean) {
 
     if (isValid) {
 
-      if (white_must_eat && move.move_type != "capture") {
+      if (white_must_capture && move.move_type != "capture") {
         val moves = intelligence.getPossibleMovesFor(chessboard.grid, "w", "b")
         // If the first element of the first move array is a captur move...
         if (moves.length > 0 && moves(0) != null && moves(0).length > 0 && moves(0)(0).move_type == "capture") {
@@ -91,7 +91,7 @@ class Game private (val white_must_eat: Boolean) {
         }
       }
       // Force user to choose longest "capture" move
-      if (white_must_eat && move.move_type == "capture") {
+      if (white_must_capture && move.move_type == "capture") {
         val moves = intelligence.getPossibleMovesFor(chessboard.grid, "w", "b")
 
         if (moves.length > 0) {
@@ -152,12 +152,12 @@ class Game private (val white_must_eat: Boolean) {
   */
 object Game {
 
-  var white_must_eat = true;
+  var white_must_capture = true;
 
   var instance: Game = null
 
   def getInstance() = {
-    if (instance == null) instance = new Game(white_must_eat)
+    if (instance == null) instance = new Game(white_must_capture)
     instance
   }
 
@@ -172,7 +172,7 @@ object Main extends App {
     var currentLocale = Locale.getDefault();
     var messages = ResourceBundle.getBundle("MessagesBundle", currentLocale);
     println(messages.getString("testMsg"));
-    //Game.white_must_eat = false
+    //Game.white_must_capture = false
     Game.getInstance
   }
 }

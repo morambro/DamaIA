@@ -103,9 +103,9 @@ object Chessboard {
       move(grid, m.from_x, m.from_y, m.to_x, m.to_y)
       //m.printMove
       if (m.move_type == "capture") {
-        val toEat = grid((m.from_x + m.to_x) / 2)((m.from_y + m.to_y) / 2)
-        //println("mangiata pedina in ("+toEat.x+","+toEat.y+") = "+toEat.content)
-        toEat.content = null
+        val toCapture = grid((m.from_x + m.to_x) / 2)((m.from_y + m.to_y) / 2)
+        //println("mangiata pedina in ("+toCapture.x+","+toCapture.y+") = "+toCapture.content)
+        toCapture.content = null
       }
       // If the pawn reaches the first row, becomes a King
       if (m.to_x == 0 && player == "w") grid(m.to_x)(m.to_y).content = new KingPawn("w")
@@ -165,7 +165,7 @@ object Chessboard {
         if (m.from_x - m.to_x == 2 && abs(m.from_y - m.to_y) == 2) {
           if (grid(m.to_x)(m.to_y).content == null)
             grid((m.from_x + m.to_x) / 2)((m.from_y + m.to_y) / 2).content match {
-              // In case of KingPawn, return false, cause simple Pawn cannot eat KingPawn
+              // In case of KingPawn, return false, cause simple Pawn cannot capture KingPawn
               case p: KingPawn =>
               // Case in wich middle pawn is an opponent pawn
               case p: Pawn if (p.player == opponent) => m.move_type = "capture"; return true
@@ -214,7 +214,7 @@ class Intelligence {
   /**
 	 * tells if there could be a move of type "capture" from the given position and given direction
 	 */
-  private def canEat(grid: Array[Array[Box]],
+  private def canCapture(grid: Array[Array[Box]],
                      x: Int,
                      y: Int,
                      direction: (Int, Int) => (Int, Int)): (Int, Int) = {
@@ -258,10 +258,10 @@ class Intelligence {
     grid(f_x)(f_y).content match {
       case null =>
       case p: KingPawn => {
-        val res_left     = canEat(grid, f_x, f_y, (a: Int, b: Int) => (a + 2, b - 2))
-        val res_right    = canEat(grid, f_x, f_y, (a: Int, b: Int) => (a + 2, b + 2))
-        val res_up_right = canEat(grid, f_x, f_y, (a: Int, b: Int) => (a - 2, b + 2))
-        val res_up_left  = canEat(grid, f_x, f_y, (a: Int, b: Int) => (a - 2, b - 2))
+        val res_left     = canCapture(grid, f_x, f_y, (a: Int, b: Int) => (a + 2, b - 2))
+        val res_right    = canCapture(grid, f_x, f_y, (a: Int, b: Int) => (a + 2, b + 2))
+        val res_up_right = canCapture(grid, f_x, f_y, (a: Int, b: Int) => (a - 2, b + 2))
+        val res_up_left  = canCapture(grid, f_x, f_y, (a: Int, b: Int) => (a - 2, b - 2))
 
         // If i found a possible capture "on the left" add the new move to current_move
         if (res_left != null) {
@@ -344,8 +344,8 @@ class Intelligence {
         }
       }
       case p: Pawn => {
-        val res_left  = canEat(grid, f_x, f_y, (a: Int, b: Int) => (inc(inc(a)), b - 2))
-        val res_right = canEat(grid, f_x, f_y, (a: Int, b: Int) => (inc(inc(a)), b + 2))
+        val res_left  = canCapture(grid, f_x, f_y, (a: Int, b: Int) => (inc(inc(a)), b - 2))
+        val res_right = canCapture(grid, f_x, f_y, (a: Int, b: Int) => (inc(inc(a)), b + 2))
 
         // If i found a possible capture "on the left" add the new move to current_move
         if (res_left != null) {
@@ -412,7 +412,7 @@ class Intelligence {
       case p: KingPawn =>
       // Case in wich there is a simple opponent pawn
       case p: Pawn => {
-        var res = canEat(grid, from_x, from_y, (a: Int, b: Int) => (inc(inc(a)), inc_y(b)))
+        var res = canCapture(grid, from_x, from_y, (a: Int, b: Int) => (inc(inc(a)), inc_y(b)))
         var t   = new ListBuffer[ListBuffer[Move]]()
         if (res != null) {
           t += new ListBuffer[Move](); t(0) += new Move(from_x, from_y, res._1, res._2, "capture")
@@ -452,7 +452,7 @@ class Intelligence {
         b += ListBuffer(new Move(from_x, from_y, x, y, "move")); return b
       // Every pawn is ok!
       case p: Pawn => {
-        val res        = canEat(grid, from_x, from_y, (a: Int, b: Int) => (inc(inc(a)), inc_y(b)))
+        val res        = canCapture(grid, from_x, from_y, (a: Int, b: Int) => (inc(inc(a)), inc_y(b)))
         var mult_moves = new ListBuffer[ListBuffer[Move]]()
         if (res != null) {
           mult_moves += ListBuffer[Move]();
@@ -522,12 +522,12 @@ class Intelligence {
               }
           }))
     // choose al move arrays in wich the first move is a capture
-    val eat_moves = moves.filter(move => move.length > 0 && move(0).move_type == "capture")
-    if (eat_moves.length > 0) {
-      var length = eat_moves(0).length
-      eat_moves.foreach(m => if (m.length > length) length = m.length)
+    val capture_moves = moves.filter(move => move.length > 0 && move(0).move_type == "capture")
+    if (capture_moves.length > 0) {
+      var length = capture_moves(0).length
+      capture_moves.foreach(m => if (m.length > length) length = m.length)
       // Return all move arrays wich have the maximum lenght
-      return eat_moves.filter(m => m.length == length).toArray
+      return capture_moves.filter(m => m.length == length).toArray
     }
     moves.toArray
   }
