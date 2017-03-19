@@ -1,13 +1,19 @@
 import scala.actors._
 import scala.actors.Actor._
 import scala.collection.mutable.ListBuffer
+import java.util._;
+import java.text.MessageFormat;
 
 /**
   * Logic class which coordinates the different parts of the game. It offers also methods callable by the View.
   *
   */
 class Game private (val white_must_eat: Boolean) {
+  var currentLocale = Locale.getDefault();
+  var messages = ResourceBundle.getBundle("MessagesBundle", currentLocale);
   var pView = new ChessboardView
+  var formatter = new MessageFormat("");
+  formatter.setLocale(currentLocale);
 
   def view = pView
   def view_=(view: ChessboardView) { pView = view }
@@ -44,20 +50,25 @@ class Game private (val white_must_eat: Boolean) {
   def replayActions() {
     val heur = if (view.getHeuristic == "killer heuristic") true else false
     val s    = intelligence.minMax(view.getDepth, chessboard.grid, heur, view.getEval)
+
     if (s._2 != null) {
-      println("\nvalore minmax per 'b' = " + s._1 + " mossa : ")
+      {
+        var stuff:Array[Object]=new Array[Object](1); stuff(0)= new Integer (s._1)
+        formatter.applyPattern(messages.getString("minimaxValue"));
+        println(formatter.format(stuff))
+      }
       s._2.foreach(m => m.printMove)
       Chessboard.executeMoves(chessboard.grid, s._2, "b")
       view.updateChessboard(chessboard)
       chessboard.printBoard
     } else {
-      println("\nNessuna mossa possibile!")
-      view.showPopUpMessage("Partita finita, il bianco vince!")
+      println(messages.getString("noLegalMoves"));
+      view.showPopUpMessage(messages.getString("gameOverWhiteWins"));
     }
 
     // If white doesn't have other possible moves, communicates that black wins!
     if (intelligence.getPossibleMovesFor(chessboard.grid, "w", "b").length == 0)
-      view.showPopUpMessage("Partita finita, il nero vince!")
+      view.showPopUpMessage(messages.getString("gameOverBlackWins"));
   }
 
   /**
@@ -74,8 +85,8 @@ class Game private (val white_must_eat: Boolean) {
         val moves = intelligence.getPossibleMovesFor(chessboard.grid, "w", "b")
         // If the first element of the first move array is a captur move...
         if (moves.length > 0 && moves(0) != null && moves(0).length > 0 && moves(0)(0).move_type == "capture") {
-          println("LA MOSSA NON E' VALIDA PERCHE' IL GIOCATORE DEVE MANGIARE!!")
-          view.showPopUpMessage("Mossa non valida, il bianco deve mangiare!")
+          println(messages.getString("illegalMove") + " " + messages.getString("captureIsMandatory"));
+          view.showPopUpMessage(messages.getString("illegalMove") + " " + messages.getString("captureIsMandatory"));
           return false;
         }
       }
@@ -92,10 +103,8 @@ class Game private (val white_must_eat: Boolean) {
             moves.foreach(m => if (m.length > max) max = m.length)
             // If the length of curr moves is less then the maximum, communicate error to user and stop
             if (curr(0).length < max) {
-              println(
-                "LA MOSSA NON E' VALIDA PERCHE' IL GIOCATORE DEVE SCEGLIERE LA MOSSA DI CATTURA PIU LUNGA")
-              view.showPopUpMessage(
-                "Mossa non valida, il bianco deve scegliere la mossa di cattura più lunga!")
+              println(messages.getString("illegalMove") + " " + messages.getString("maxCaptureIsMandatory"));
+              view.showPopUpMessage(messages.getString("illegalMove") + " " + messages.getString("maxCaptureIsMandatory"));
               return false
             }
 
@@ -110,10 +119,8 @@ class Game private (val white_must_eat: Boolean) {
             println("finished? " + finished)
 
           } else {
-            println(
-              "LA MOSSA NON E' VALIDA PERCHE' IL GIOCATORE DEVE SCEGLIERE LA MOSSA DI CATTURA PIU LUNGA")
-            view.showPopUpMessage(
-              "Mossa non valida, il bianco deve scegliere la mossa di cattura più lunga!")
+            println(messages.getString("illegalMove") + " " + messages.getString("maxCaptureIsMandatory"));
+            view.showPopUpMessage(messages.getString("illegalMove") + " " + messages.getString("maxCaptureIsMandatory"));
             return false;
           }
         }
@@ -122,14 +129,14 @@ class Game private (val white_must_eat: Boolean) {
       Chessboard.executeMoves(chessboard.grid, Array(move), "w")
       view.updateChessboard(chessboard)
       if (finished) {
-        view.setStatus("b", "Black moves")
+        view.setStatus("b", messages.getString("blackMoves"))
         multiple_moves = null
         // delegate to an actor opponent's reply
         view.showLoadingPopUp
         actor {
           reactWithin(50) {
             case TIMEOUT =>
-              replayActions; view.hideLoadingPopUp; view.setStatus("w", "White moves")
+              replayActions; view.hideLoadingPopUp; view.setStatus("w", messages.getString("whiteMoves"))
           }
         }
       } else {
@@ -138,7 +145,6 @@ class Game private (val white_must_eat: Boolean) {
     }
     isValid
   }
-
 }
 
 /**
@@ -163,6 +169,9 @@ object Game {
 
 object Main extends App {
   override def main(a: Array[String]) {
+    var currentLocale = Locale.getDefault();
+    var messages = ResourceBundle.getBundle("MessagesBundle", currentLocale);
+    println(messages.getString("testMsg"));
     //Game.white_must_eat = false
     Game.getInstance
   }

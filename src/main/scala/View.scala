@@ -14,6 +14,8 @@ import scala.swing.Frame
 import scala.swing.Color
 import scala.swing.Separator
 import scala.swing.event._
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 import java.io.File
 import javax.swing.ImageIcon
@@ -71,13 +73,15 @@ class ChessBox(bk: Icon, var top_img: Image, var selected: Boolean) extends Labe
 }
 
 class ChessboardView extends MainFrame {
-
-  title = "Gioco della Dama"
+  var currentLocale = Locale.getDefault();
+  var messages = ResourceBundle.getBundle("MessagesBundle", currentLocale);
+  
+  title = messages.getString("windowTitle");
 
   val loadingPopup = new LoadingPopUp
 
   val chessboard  = new GridPanel(8, 8)
-  val replyButton = new Button("Reply")
+  val replyButton = new Button(messages.getString("reply"))
 
   val depth_box  = new ComboBox[Int](List(10, 8, 6, 4, 2, 1))
   val eval_func  = new ComboBox[String](List("dummy", "eval2", "eval3", "eval4"))
@@ -88,7 +92,7 @@ class ChessboardView extends MainFrame {
   depth_box.preferredSize = new Dimension(70, 25)
 
   val status = new Label
-  setStatus("w", "White moves")
+  setStatus("w", messages.getString("whiteMoves"))
   status.minimumSize = new Dimension(100, 30)
   status.maximumSize = new Dimension(100, 30)
   status.preferredSize = new Dimension(100, 30)
@@ -161,12 +165,12 @@ class ChessboardView extends MainFrame {
                 }
               } else {
                 // no boxes previously selected
-                println("selected è vuoto");
+                println(messages.getString("emptySquareSelected"));
               }
 
             } else {
-              if (box.top == black || box.top == black_king) {
-                println("hai selezionato una pedina nera!!");
+              if (box.top == black || box.top == black_king) {                
+                println(messages.getString("pickedBlackPiece"));
                 return;
               }
               // if the box clicked was selected, de-select it
@@ -189,11 +193,11 @@ class ChessboardView extends MainFrame {
     }
   }
 
-  val newgame = new MenuItem("Nuova partita")
+  val newgame = new MenuItem(messages.getString("newGame"))
 
   contents = new BorderPanel {
     add(new MenuBar {
-      contents += new Menu("Menu") {
+      contents += new Menu(messages.getString("menu")) {
         contents += newgame
       }
     }, BorderPanel.Position.North)
@@ -202,17 +206,17 @@ class ChessboardView extends MainFrame {
     add(
       new GridPanel(2, 0) {
         contents += new FlowPanel() {
-          contents += new Label("Status : ")
+          contents += new Label(messages.getString("status"))
           contents += status
           contents += new Separator
-          contents += new Label("Profondità ricerca : ")
+          contents += new Label(messages.getString("searchDepth"))
           contents += depth_box
 
         }
         contents += new FlowPanel() {
-          contents += new Label("Funzione di valutazione : ")
+          contents += new Label(messages.getString("evalFunction"))
           contents += eval_func
-          contents += new Label("Euristica : ")
+          contents += new Label(messages.getString("heuristics"))
           contents += heuristics
         }
       },
@@ -228,8 +232,8 @@ class ChessboardView extends MainFrame {
     newgame.reactions += {
       case e: ButtonClicked => {
         val response = scala.swing.Dialog.showConfirmation(null,
-                                                           "Sei sicuro?",
-                                                           "Nuova partita",
+                                                           messages.getString("really"),
+                                                           messages.getString("newGame"),
                                                            Options.YesNo,
                                                            Message.Question,
                                                            scala.swing.Swing.EmptyIcon)
